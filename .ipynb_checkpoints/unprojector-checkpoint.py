@@ -49,6 +49,8 @@ def unproject_translations(scene_uvs          : torch.Tensor ,
     #It outputs two torch.Tensor values, one of which is the mean and the other is weights
 
     #Ryan's personal notes:
+    # TODO: Possibly change all things called 'output' to 'texture' to make it consistent naming with other functions
+    # TODO: Come up with a better name for this function
     # MAYBE todo: eliminate batch size, because we're going to be doing this once for every image anyway...
     # Batch size is technically unnesecary...but it might be nice to keep it, idk...it combines confidence of multiple scenes very nicely...(ok, I'll keep batch size)
     # TODO: Perhaps keep track of output_sum_of_squares as well (another vector) so that we could output the variance at the same time as we output the sum?
@@ -239,3 +241,4 @@ def test_unproject_translations():
     icecream.ic(t.grad)
     out_tex.sum().backward()
     icecream.ic(t.grad.shape)
+          
