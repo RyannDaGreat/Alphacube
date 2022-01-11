@@ -28,13 +28,13 @@ def calculate_subpixel_weights(x,y):
     return X,Y,W
 
 
-def unproject_translations(scene_translations : torch.Tensor ,
-                           scene_uvs          : torch.Tensor ,
-                           scene_labels       : torch.Tensor ,
-                           num_labels         : int          ,
-                           output_height      : int          ,
-                           output_width       : int          ,
-                           version            : str='fast'   ):
+def unproject_translations(scene_translations : torch.Tensor,
+                           scene_uvs          : torch.Tensor,
+                           scene_labels       : torch.Tensor,
+                           num_labels         : int         ,
+                           output_height      : int         ,
+                           output_width       : int         ,
+                           version            : str='fast'  ):
     #This function is the opposite of the project_textures function
     #It's an inverse function, in a way
     #See the unproject_translations_demo.ipynb for a visual example
@@ -185,13 +185,13 @@ def unproject_translations(scene_translations : torch.Tensor ,
     return output_mean, output_weight
 
 
-def unproject_translations_individually(scene_translations : torch.Tensor ,
-                                        scene_uvs          : torch.Tensor ,
-                                        scene_labels       : torch.Tensor ,
-                                        num_labels         : int          ,
-                                        output_height      : int          ,
-                                        output_width       : int          ,
-                                        version            : str='fast'   ):
+def unproject_translations_individually(scene_translations : torch.Tensor,
+                                        scene_uvs          : torch.Tensor,
+                                        scene_labels       : torch.Tensor,
+                                        num_labels         : int         ,
+                                        output_height      : int         ,
+                                        output_width       : int         ,
+                                        version            : str='fast'  ):
     #Takes in and spits out the same tensor shapes as unproject_translations(...), except BS is at the beginning
     #That is to say, this outputs (textures,weights) aka (BS NL NC TH TW,  BS NC TH TW) tensors
     #(See the unproject_translations(...) function to see what those two-letter dimension acronyms mean)

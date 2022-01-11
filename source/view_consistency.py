@@ -3,7 +3,7 @@ import torch
 from .unprojector import unproject_translations_individually
 
 
-def weighted_mean(images,weights):
+def weighted_mean(images, weights):
     #Takes BCHW images and BHW weights and returns a pixel-wise CHW average
     
     assert len(images.shape)==4 and len(weights.shape)==3
@@ -17,7 +17,7 @@ def weighted_mean(images,weights):
     return numerator/denominator
 
 
-def weighted_variance(images,weights):
+def weighted_variance(images, weights):
     #Takes BCHW images and BHW weights and returns a pixel-wise CHW variances
     #Variance is the average squared distance to the mean
     
@@ -47,7 +47,7 @@ class ViewConsistencyLoss(nn.Module):
         self.recovery_width =recovery_width 
         self.recovery_height=recovery_height
         
-    def forward(self,scene_translations,scene_uvs,scene_labels):
+    def forward(self, scene_translations, scene_uvs, scene_labels):
         
         #Calculate num_labels; it's one less argument we need to specify
         #We're just calculating a loss; it's ok to lose a texture we never see
