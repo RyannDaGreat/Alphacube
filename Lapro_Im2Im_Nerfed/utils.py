@@ -52,14 +52,14 @@ def get_all_data_loaders(conf):
         aug["circle_mask"] = True
         aug["rotate"] = False
         aug["contrast"] = False
-        train_loader_a = get_data_loader_folder(os.path.join(conf['data_root'], 'train_fake'), batch_size, True, num_workers, load_labels=False, augmentation=aug )
-        test_loader_a = get_data_loader_folder(os.path.join(conf['data_root'], 'test_fake'), batch_size, False, num_workers, load_labels=False, augmentation=aug )
+        train_loader_a = get_data_loader_folder(os.path.join(conf['data_root'], 'train_fake'), batch_size, True, num_workers, augmentation=aug )
+        test_loader_a = get_data_loader_folder(os.path.join(conf['data_root'], 'test_fake'), batch_size, False, num_workers, augmentation=aug )
         aug["new_size_min"] = conf["new_size_min_b"]
         aug["new_size_max"] = conf["new_size_max_b"]
         aug["circle_mask"] = False
         aug["contrast"] = False
-        train_loader_b = get_data_loader_folder(os.path.join(conf['data_root'], 'train_real'), batch_size, True, num_workers, load_labels=False, augmentation=aug )
-        test_loader_b = get_data_loader_folder(os.path.join(conf['data_root'], 'test_real'), batch_size, False, num_workers, load_labels=False, augmentation=aug )
+        train_loader_b = get_data_loader_folder(os.path.join(conf['data_root'], 'train_real'), batch_size, True, num_workers, augmentation=aug )
+        test_loader_b = get_data_loader_folder(os.path.join(conf['data_root'], 'test_real'), batch_size, False, num_workers, augmentation=aug )
         print("train_loader_a", len(train_loader_a))
         print("train_loader_b", len(train_loader_b))
         print("test_loader_a", len(test_loader_a))
@@ -68,8 +68,8 @@ def get_all_data_loaders(conf):
         raise IOError("Please provide a 'data_root' folder in the config file!")
     return train_loader_a, train_loader_b, test_loader_a, test_loader_b
 
-def get_data_loader_folder(input_folder, batch_size, train, num_workers=4, load_labels=False, load_paths=False, augmentation={}):
-    dataset = ImageFolder(input_folder, return_labels=load_labels, return_paths=load_paths, augmentation=augmentation)
+def get_data_loader_folder(input_folder, batch_size, train, num_workers=4,  load_paths=False, augmentation={}):
+    dataset = ImageFolder(input_folder, return_paths=load_paths, augmentation=augmentation)
     loader = DataLoader(dataset=dataset, batch_size=batch_size, shuffle=train, drop_last=True, num_workers=num_workers)
     return loader
 

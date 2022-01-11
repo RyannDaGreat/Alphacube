@@ -64,8 +64,8 @@ aug["circle_mask"] = False
 aug["rotate"] = False
 datasets = []
 for path in opts.input_folder:
-  translationData = ImageFolder(path, return_labels=False, return_paths=True, augmentation=aug)
-  datasets.append( translationData )
+    translationData = ImageFolder(path, return_paths=True, augmentation=aug)
+    datasets.append( translationData )
 concatDataset = torch.utils.data.ConcatDataset( datasets )
 translationDataLoader = torch.utils.data.DataLoader(dataset=concatDataset, batch_size=conf["batch_size"], shuffle=False, drop_last=True, num_workers=conf["num_workers"])
 
@@ -86,7 +86,7 @@ if opts.style_input_folder:
     aug["output_size"] = (w,h)
     aug["circle_mask"] = False
     aug["rotate"] = False
-    styleData = ImageFolder(opts.style_input_folder, return_labels=False, return_paths=False, augmentation=aug)
+    styleData = ImageFolder(opts.style_input_folder, return_paths=False, augmentation=aug)
     styleDataLoader = torch.utils.data.DataLoader(dataset=styleData, batch_size=conf["batch_size"], shuffle=True, drop_last=True, num_workers=conf["num_workers"])
     styleIterator = iter(styleDataLoader)
 
