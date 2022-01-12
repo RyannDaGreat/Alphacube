@@ -13,11 +13,12 @@ import numpy
 import torch
 import torch.utils.data as data
 import torchvision
-from PIL import Image, ImageDraw, ImageOps
 from torchvision import transforms
 
 import rp
 from rp import is_image_file
+
+from PIL import Image, ImageDraw, ImageOps #TODO: Eliminate ALL of these
 
 def default_loader(path):
     return Image.open(path).convert('RGB')
@@ -141,16 +142,21 @@ class ImageFolder(data.Dataset):
 
             img = circleMask(img, maskOx, maskOy, maskRadius)
 
+        img = transforms.functional.to_tensor(img)
+
+        assert isinstance(img, torch.Tensor)
+
         img = transforms.functional.resize( img, randSize, Image.BILINEAR )
 
         if self.rotate:
             img = transforms.functional.rotate( img, randAng, Image.BILINEAR )
         
-        rx = random.randint(0, max(img.width  - self.output_size[0], 0))
-        ry = random.randint(0, max(img.height - self.output_size[1], 0))
+        C,H,W=img.shape
+
+        ry = random.randint(0, max(H - self.output_size[1], 0))
+        rx = random.randint(0, max(W - self.output_size[0], 0))
 
         img = transforms.functional.crop(img, ry, rx, self.output_size[1], self.output_size[0])
-        img = transforms.functional.to_tensor(img)
 
         if self.contrast:
             c = random.uniform( 0.75, 1.25)

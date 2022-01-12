@@ -69,33 +69,8 @@ class ImageFilelist(data.Dataset):
 # directory as well as the subdirectories
 ###############################################################################
 
-# IMG_EXTENSIONS = [
-#     '.jpg', '.JPG', '.jpeg', '.JPEG',
-#     '.png', '.PNG', '.ppm', '.PPM', '.bmp', '.BMP',
-# ]
-
-
-# def is_image_file(filename):
-#     return any(filename.endswith(extension) for extension in IMG_EXTENSIONS)
-
-# from rp import is_image_file
-
-def make_dataset(dir):
-
-    return [x for x in rp.get_all_files(dir, sort_by='number') if rp.is_image_file(x)]
-
-    # images = []
-    # assert os.path.isdir(dir), '%s is not a valid directory' % dir
-
-    # for root, _, fnames in sorted(os.walk(dir)):
-    #     for fname in fnames:
-    #         if not root.endswith( "ids" ) and not root.endswith( "labels" ) and not root.endswith( "normals" ) and not root.endswith( "depths" ):
-    #             if is_image_file(fname):
-    #                 path = os.path.join(root, fname)
-    #                 images.append(path)
-    # icecream.ic(dir,len(images))
-    # print(rp.line_join(rp.random_batch(images,20)))
-    # return images
+def get_image_files(folder):
+    return [x for x in rp.get_all_files(folder, sort_by='number') if rp.is_image_file(x)]
 
 
 def circleMask(img, ox, oy, radius):
@@ -119,7 +94,7 @@ class ImageFolder(data.Dataset):
         return_paths  = False,
         augmentation  = {},
     ):
-        imgs = make_dataset(root)
+        imgs = get_image_files(root)
         if len(imgs) == 0:
             raise RuntimeError("Found 0 images in: " + root + "\n")
 
@@ -145,10 +120,12 @@ class ImageFolder(data.Dataset):
 
         maskRadius, maskOx, maskOy = None, None, None
 
-        randAng = random.random()*20-10
+
         minOutputSize = min(self.output_size)
         maxOutputSize = max(self.output_size)
-        randSize = random.randint( self.new_size_min, self.new_size_max )
+
+        randAng  = random.random()*20-10
+        randSize = random.randint(self.new_size_min, self.new_size_max)
 
         if self.add_circle_mask:
             minSize = min((img.width, img.height))
@@ -164,20 +141,26 @@ class ImageFolder(data.Dataset):
 
             img = circleMask(img, maskOx, maskOy, maskRadius)
 
+        img = transforms.functional.to_tensor(img)
+
+        assert isinstance(img, torch.Tensor)
+
         img = transforms.functional.resize( img, randSize, Image.BILINEAR )
+
         if self.rotate:
             img = transforms.functional.rotate( img, randAng, Image.BILINEAR )
         
-        rx = random.randint( 0, max(img.width  - self.output_size[0],0) )
-        ry = random.randint( 0, max(img.height - self.output_size[1],0) )
+        C,H,W=img.shape
 
-        img = transforms.functional.crop( img, ry, rx, self.output_size[1], self.output_size[0] )
+        ry = random.randint(0, max(H - self.output_size[1], 0))
+        rx = random.randint(0, max(W - self.output_size[0], 0))
 
-        img = transforms.functional.to_tensor( img )
+        img = transforms.functional.crop(img, ry, rx, self.output_size[1], self.output_size[0])
+
         if self.contrast:
-            c = random.uniform( 0.75, 1.25 )
-            b = random.uniform( -0.1, 0.1 )
-            img = img*c + b
+            c = random.uniform( 0.75, 1.25)
+            b = random.uniform(-0.1,  0.1 )
+            img = img * c + b
 
         img = transforms.functional.normalize(img, (0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
 
