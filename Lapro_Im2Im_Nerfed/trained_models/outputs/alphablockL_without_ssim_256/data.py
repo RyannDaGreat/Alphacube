@@ -8,12 +8,16 @@ import os.path
 import random
 from collections import namedtuple
 
+import icecream
 import numpy
 import torch
 import torch.utils.data as data
 import torchvision
 from PIL import Image, ImageDraw, ImageOps
 from torchvision import transforms
+
+import rp
+from rp import is_image_file
 
 def default_loader(path):
     return Image.open(path).convert('RGB')
@@ -33,12 +37,18 @@ def default_flist_reader(flist):
 
 
 class ImageFilelist(data.Dataset):
-    def __init__(self, root, flist, transform=None,
-                 flist_reader=default_flist_reader, loader=default_loader):
-        self.root = root
-        self.imlist = flist_reader(flist)
+    def __init__(
+        self,
+        root,
+        flist,
+        transform    = None,
+        flist_reader = default_flist_reader,
+        loader       = default_loader,
+    ):
+        self.imlist    = flist_reader(flist)
+        self.root      = root
         self.transform = transform
-        self.loader = loader
+        self.loader    = loader
 
     def __getitem__(self, index):
         impath = self.imlist[index]
@@ -52,27 +62,6 @@ class ImageFilelist(data.Dataset):
         return len(self.imlist)
 
 
-class ImageLabelFilelist(data.Dataset):
-    def __init__(self, root, flist, transform=None,
-                 flist_reader=default_flist_reader, loader=default_loader):
-        self.root = root
-        self.imlist = flist_reader(os.path.join(self.root, flist))
-        self.transform = transform
-        self.loader = loader
-        self.classes = sorted(list(set([path.split('/')[0] for path in self.imlist])))
-        self.class_to_idx = {self.classes[i]: i for i in range(len(self.classes))}
-        self.imgs = [(impath, self.class_to_idx[impath.split('/')[0]]) for impath in self.imlist]
-
-    def __getitem__(self, index):
-        impath, label = self.imgs[index]
-        img = self.loader(os.path.join(self.root, impath))
-        if self.transform is not None:
-            img = self.transform(img)
-        return img, label
-
-    def __len__(self):
-        return len(self.imgs)
-
 ###############################################################################
 # Code from
 # https://github.com/pytorch/vision/blob/master/torchvision/datasets/folder.py
@@ -80,31 +69,36 @@ class ImageLabelFilelist(data.Dataset):
 # directory as well as the subdirectories
 ###############################################################################
 
-IMG_EXTENSIONS = [
-    '.jpg', '.JPG', '.jpeg', '.JPEG',
-    '.png', '.PNG', '.ppm', '.PPM', '.bmp', '.BMP',
-]
+# IMG_EXTENSIONS = [
+#     '.jpg', '.JPG', '.jpeg', '.JPEG',
+#     '.png', '.PNG', '.ppm', '.PPM', '.bmp', '.BMP',
+# ]
 
 
-def is_image_file(filename):
-    return any(filename.endswith(extension) for extension in IMG_EXTENSIONS)
+# def is_image_file(filename):
+#     return any(filename.endswith(extension) for extension in IMG_EXTENSIONS)
 
+# from rp import is_image_file
 
 def make_dataset(dir):
-    images = []
-    assert os.path.isdir(dir), '%s is not a valid directory' % dir
 
-    for root, _, fnames in sorted(os.walk(dir)):
-        for fname in fnames:
-            if not root.endswith( "ids" ) and not root.endswith( "labels" ) and not root.endswith( "normals" ) and not root.endswith( "depths" ):
-                if is_image_file(fname):
-                    path = os.path.join(root, fname)
-                    images.append(path)
+    return [x for x in rp.get_all_files(dir, sort_by='number') if rp.is_image_file(x)]
 
-    return images
+    # images = []
+    # assert os.path.isdir(dir), '%s is not a valid directory' % dir
+
+    # for root, _, fnames in sorted(os.walk(dir)):
+    #     for fname in fnames:
+    #         if not root.endswith( "ids" ) and not root.endswith( "labels" ) and not root.endswith( "normals" ) and not root.endswith( "depths" ):
+    #             if is_image_file(fname):
+    #                 path = os.path.join(root, fname)
+    #                 images.append(path)
+    # icecream.ic(dir,len(images))
+    # print(rp.line_join(rp.random_batch(images,20)))
+    # return images
 
 
-def circleMask( img, ox, oy, radius ):
+def circleMask(img, ox, oy, radius):
     mask = Image.new('L', img.size, 255)
     draw = ImageDraw.Draw(mask)
     x0 = img.size[0]*0.5 - radius + ox
@@ -125,11 +119,9 @@ class ImageFolder(data.Dataset):
         return_paths  = False,
         augmentation  = {},
     ):
-        imgs = sorted(make_dataset(root))
+        imgs = make_dataset(root)
         if len(imgs) == 0:
-            raise(RuntimeError("Found 0 images in: " + root + "\n"
-                               "Supported image extensions are: " +
-                               ",".join(IMG_EXTENSIONS)))
+            raise RuntimeError("Found 0 images in: " + root + "\n")
 
         self.root            = root
         self.imgs            = imgs
