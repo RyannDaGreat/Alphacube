@@ -18,49 +18,10 @@ from torchvision import transforms
 import rp
 from rp import is_image_file
 
-from PIL import Image, ImageDraw, ImageOps #TODO: Eliminate ALL of these
+from PIL import Image, ImageDraw#TODO: Eliminate ALL of these
 
 def default_loader(path):
     return Image.open(path).convert('RGB')
-
-
-def default_flist_reader(flist):
-    """
-    flist format: impath label\nimpath label\n ...(same to caffe's filelist)
-    """
-    imlist = []
-    with open(flist, 'r') as rf:
-        for line in rf.readlines():
-            impath = line.strip()
-            imlist.append(impath)
-
-    return imlist
-
-
-class ImageFilelist(data.Dataset):
-    def __init__(
-        self,
-        root,
-        flist,
-        transform    = None,
-        flist_reader = default_flist_reader,
-        loader       = default_loader,
-    ):
-        self.imlist    = flist_reader(flist)
-        self.root      = root
-        self.transform = transform
-        self.loader    = loader
-
-    def __getitem__(self, index):
-        impath = self.imlist[index]
-        img = self.loader(os.path.join(self.root, impath))
-        if self.transform is not None:
-            img = self.transform(img)
-
-        return img
-
-    def __len__(self):
-        return len(self.imlist)
 
 
 ###############################################################################
@@ -75,14 +36,19 @@ def get_image_files(folder):
 
 
 def circleMask(img, ox, oy, radius):
+    assert     rp.is_image          (img)
+    assert not rp.is_grayscale_image(img)
+
     mask = Image.new('L', img.size, 255)
     draw = ImageDraw.Draw(mask)
-    x0 = img.size[0]*0.5 - radius + ox
-    x1 = img.size[0]*0.5 + radius + ox
-    y0 = img.size[1]*0.5 - radius + oy
-    y1 = img.size[1]*0.5 + radius + oy
-    draw.ellipse([x0,y0,x1,y1], fill=0)
-    img.paste( (0,0,0), mask=mask )
+    
+    x0 = img.size[0] * 0.5 - radius + ox
+    x1 = img.size[0] * 0.5 + radius + ox
+    y0 = img.size[1] * 0.5 - radius + oy
+    y1 = img.size[1] * 0.5 + radius + oy
+    
+    draw.ellipse([x0, y0, x1, y1], fill=0)
+    img.paste((0, 0, 0), mask=mask)
     return img
 
 
@@ -91,9 +57,9 @@ class ImageFolder(data.Dataset):
     def __init__(
         self,
         root,
-        loader        = default_loader,
-        return_paths  = False,
-        augmentation  = {},
+        loader       = default_loader,
+        return_paths = False,
+        augmentation = {},
     ):
         imgs = get_image_files(root)
         if len(imgs) == 0:
@@ -119,9 +85,6 @@ class ImageFolder(data.Dataset):
         path = self.imgs[index]
         img = self.loader(path)
 
-        maskRadius, maskOx, maskOy = None, None, None
-
-
         minOutputSize = min(self.output_size)
         maxOutputSize = max(self.output_size)
 
@@ -146,10 +109,12 @@ class ImageFolder(data.Dataset):
 
         assert isinstance(img, torch.Tensor)
 
-        img = transforms.functional.resize( img, randSize, Image.BILINEAR )
+        interp = transforms.InterpolationMode.NEAREST
+
+        img = transforms.functional.resize(img, randSize, interp)
 
         if self.rotate:
-            img = transforms.functional.rotate( img, randAng, Image.BILINEAR )
+            img = transforms.functional.rotate(img, randAng, interp)
         
         C,H,W=img.shape
 

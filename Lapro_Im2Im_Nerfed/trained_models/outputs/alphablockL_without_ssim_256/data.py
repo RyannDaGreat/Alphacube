@@ -13,11 +13,12 @@ import numpy
 import torch
 import torch.utils.data as data
 import torchvision
-from PIL import Image, ImageDraw, ImageOps
 from torchvision import transforms
 
 import rp
 from rp import is_image_file
+
+from PIL import Image, ImageDraw#TODO: Eliminate ALL of these
 
 def default_loader(path):
     return Image.open(path).convert('RGB')
@@ -118,9 +119,6 @@ class ImageFolder(data.Dataset):
         path = self.imgs[index]
         img = self.loader(path)
 
-        maskRadius, maskOx, maskOy = None, None, None
-
-
         minOutputSize = min(self.output_size)
         maxOutputSize = max(self.output_size)
 
@@ -145,10 +143,12 @@ class ImageFolder(data.Dataset):
 
         assert isinstance(img, torch.Tensor)
 
-        img = transforms.functional.resize( img, randSize, Image.BILINEAR )
+        interp = transforms.InterpolationMode.NEAREST
+
+        img = transforms.functional.resize(img, randSize, interp)
 
         if self.rotate:
-            img = transforms.functional.rotate( img, randAng, Image.BILINEAR )
+            img = transforms.functional.rotate(img, randAng, interp)
         
         C,H,W=img.shape
 
