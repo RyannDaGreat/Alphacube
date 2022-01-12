@@ -1,3 +1,5 @@
+from rp import *
+
 def make_dataset(name,fake_dir,real_dir):
     assert directory_exists(fake_dir)
     assert directory_exists(real_dir)

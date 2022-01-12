@@ -2,28 +2,27 @@
 Copyright (C) 2018 NVIDIA Corporation.  All rights reserved.
 Licensed under the CC BY-NC-SA 4.0 license (https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode).
 """
-#from torch.utils.serialization import load_lua
+from data             import ImageFolder
+from networks         import Vgg16
+from torch.autograd   import Variable
+from torch.optim      import lr_scheduler
 from torch.utils.data import DataLoader
-from networks import Vgg16
-from torch.autograd import Variable
-from torch.optim import lr_scheduler
-from torchvision import transforms
-from data import ImageFilelist, ImageFolder
+from torchvision      import transforms
+
+import math
+import numpy as np
+import os
+import time
 import torch
 import torch.nn as nn
-import os
-import math
+import torch.nn.init as init
 import torchvision.utils as vutils
 import yaml
-import numpy as np
-import torch.nn.init as init
-import time
-# Methods
+
+# SUMMARY:
 # get_all_data_loaders      : primary data loader interface (load trainA, testA, trainB, testB)
-# get_data_loader_list      : list-based data loader
 # get_data_loader_folder    : folder-based data loader
 # get_config                : load yaml file
-# eformat                   :
 # write_2images             : save output image
 # prepare_sub_folder        : create checkpoints and images folders for saving outputs
 # write_one_row_html        : write one row of the html file for output images
@@ -37,51 +36,81 @@ import time
 # vgg_preprocess
 # get_scheduler
 # weights_init
+# eformat 
 
+
+#THIS IS THE MOST IMPORTANT FUNCTION IN THIS FILE FOR RYAN BURGERT
 def get_all_data_loaders(conf):
-    batch_size = conf['batch_size']
+
+    #This needs to be modified by Ryan Burgert later on
+
+    batch_size  = conf['batch_size']
     num_workers = conf['num_workers']
-    height = conf['crop_image_height']
-    width = conf['crop_image_width']
+    height      = conf['crop_image_height']
+    width       = conf['crop_image_width']
 
     if 'data_root' in conf:
         aug = {}
         aug["new_size_min"] = conf["new_size_min_a"]
         aug["new_size_max"] = conf["new_size_max_a"]
-        aug["output_size"] = (width, height)
-        aug["circle_mask"] = True
-        aug["rotate"] = False
-        aug["contrast"] = False
-        train_loader_a = get_data_loader_folder(os.path.join(conf['data_root'], 'train_fake'), batch_size, True, num_workers, augmentation=aug )
-        test_loader_a = get_data_loader_folder(os.path.join(conf['data_root'], 'test_fake'), batch_size, False, num_workers, augmentation=aug )
+        aug["output_size" ] = (width, height)
+        aug["circle_mask" ] = True
+        aug["rotate"      ] = False
+        aug["contrast"    ] = False
+        train_loader_a = get_data_loader_folder(os.path.join(conf['data_root'], 'train_fake'), batch_size, True , num_workers, augmentation=aug.copy(), precise = True )
+        aug["circle_mask" ] = False
+        test_loader_a  = get_data_loader_folder(os.path.join(conf['data_root'], 'test_fake' ), batch_size, False, num_workers, augmentation=aug.copy(), precise = True )
         aug["new_size_min"] = conf["new_size_min_b"]
         aug["new_size_max"] = conf["new_size_max_b"]
-        aug["circle_mask"] = False
-        aug["contrast"] = False
-        train_loader_b = get_data_loader_folder(os.path.join(conf['data_root'], 'train_real'), batch_size, True, num_workers, augmentation=aug )
-        test_loader_b = get_data_loader_folder(os.path.join(conf['data_root'], 'test_real'), batch_size, False, num_workers, augmentation=aug )
+        train_loader_b = get_data_loader_folder(os.path.join(conf['data_root'], 'train_real'), batch_size, True , num_workers, augmentation=aug.copy(), precise = False)
+        test_loader_b  = get_data_loader_folder(os.path.join(conf['data_root'], 'test_real' ), batch_size, False, num_workers, augmentation=aug.copy(), precise = False)
+
         print("train_loader_a", len(train_loader_a))
         print("train_loader_b", len(train_loader_b))
-        print("test_loader_a", len(test_loader_a))
-        print("test_loader_b", len(test_loader_b))
+        print("test_loader_a" , len(test_loader_a ))
+        print("test_loader_b" , len(test_loader_b ))
+
     else:
         raise IOError("Please provide a 'data_root' folder in the config file!")
+
     return train_loader_a, train_loader_b, test_loader_a, test_loader_b
 
-def get_data_loader_folder(input_folder, batch_size, train, num_workers=4,  load_paths=False, augmentation={}):
-    dataset = ImageFolder(input_folder, return_paths=load_paths, augmentation=augmentation)
-    loader = DataLoader(dataset=dataset, batch_size=batch_size, shuffle=train, drop_last=True, num_workers=num_workers)
+
+
+
+
+
+
+
+def get_data_loader_folder(input_folder,
+                           batch_size,
+                           train,
+                           num_workers=4,
+                           load_paths=False,
+                           augmentation={},
+                           precise=True):
+
+    dataset = ImageFolder(
+        input_folder                ,
+        return_paths = load_paths   ,
+        augmentation = augmentation ,
+        precise      = precise      ,
+    )
+
+    loader = DataLoader(
+        dataset     = dataset     ,
+        batch_size  = batch_size  ,
+        shuffle     = train       ,
+        drop_last   = True        ,
+        num_workers = num_workers ,
+    )
+
     return loader
+
 
 def get_config(config):
     with open(config, 'r') as stream:
         return yaml.load(stream, Loader=yaml.FullLoader)
-
-def eformat(f, prec):
-    s = "%.*e"%(prec, f)
-    mantissa, exp = s.split('e')
-    # add 1 to digits as 1 is taken by sign +/-
-    return "%se%d"%(mantissa, int(exp))
 
 
 def __write_images(image_outputs, display_image_num, file_name):
@@ -151,35 +180,6 @@ def write_loss(iterations, trainer, train_writer):
         train_writer.add_scalar(m, getattr(trainer, m), iterations + 1)
 
 
-def slerp(val, low, high):
-    """
-    original: Animating Rotation with Quaternion Curves, Ken Shoemake
-    https://arxiv.org/abs/1609.04468
-    Code: https://github.com/soumith/dcgan.torch/issues/14, Tom White
-    """
-    omega = np.arccos(np.dot(low / np.linalg.norm(low), high / np.linalg.norm(high)))
-    so = np.sin(omega)
-    return np.sin((1.0 - val) * omega) / so * low + np.sin(val * omega) / so * high
-
-
-def get_slerp_interp(nb_latents, nb_interp, z_dim):
-    """
-    modified from: PyTorch inference for "Progressive Growing of GANs" with CelebA snapshot
-    https://github.com/ptrblck/prog_gans_pytorch_inference
-    """
-
-    latent_interps = np.empty(shape=(0, z_dim), dtype=np.float32)
-    for _ in range(nb_latents):
-        low = np.random.randn(z_dim)
-        high = np.random.randn(z_dim)  # low + np.random.randn(512) * 0.7
-        interp_vals = np.linspace(0, 1, num=nb_interp)
-        latent_interp = np.array([slerp(v, low, high) for v in interp_vals],
-                                 dtype=np.float32)
-        latent_interps = np.vstack((latent_interps, latent_interp))
-
-    return latent_interps[:, :, np.newaxis, np.newaxis]
-
-
 # Get model list for resume
 def get_model_list(dirname, key):
     if os.path.exists(dirname) is False:
@@ -238,4 +238,46 @@ class Timer:
     def __exit__(self, exc_type, exc_value, exc_tb):
         print(self.msg % (time.time() - self.start_time))
 
+
+##################################
+##################################
+######## UNUSED FUNCTIONS ########
+##################################
+##################################
+
+
+def slerp(val, low, high):
+    """
+    original: Animating Rotation with Quaternion Curves, Ken Shoemake
+    https://arxiv.org/abs/1609.04468
+    Code: https://github.com/soumith/dcgan.torch/issues/14, Tom White
+    """
+    omega = np.arccos(np.dot(low / np.linalg.norm(low), high / np.linalg.norm(high)))
+    so = np.sin(omega)
+    return np.sin((1.0 - val) * omega) / so * low + np.sin(val * omega) / so * high
+
+
+def get_slerp_interp(nb_latents, nb_interp, z_dim):
+    """
+    modified from: PyTorch inference for "Progressive Growing of GANs" with CelebA snapshot
+    https://github.com/ptrblck/prog_gans_pytorch_inference
+    """
+
+    latent_interps = np.empty(shape=(0, z_dim), dtype=np.float32)
+    for _ in range(nb_latents):
+        low = np.random.randn(z_dim)
+        high = np.random.randn(z_dim)  # low + np.random.randn(512) * 0.7
+        interp_vals = np.linspace(0, 1, num=nb_interp)
+        latent_interp = np.array([slerp(v, low, high) for v in interp_vals],
+                                 dtype=np.float32)
+        latent_interps = np.vstack((latent_interps, latent_interp))
+
+    return latent_interps[:, :, np.newaxis, np.newaxis]
+
+
+def eformat(f, prec):
+    s = "%.*e"%(prec, f)
+    mantissa, exp = s.split('e')
+    # add 1 to digits as 1 is taken by sign +/-
+    return "%se%d"%(mantissa, int(exp))
 

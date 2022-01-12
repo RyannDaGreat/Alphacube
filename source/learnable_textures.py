@@ -1,5 +1,3 @@
-#TODO: Modify this to learn multiple textures at once as one tensor
-
 import torch
 import torch.nn as nn
 import numpy as np
@@ -90,6 +88,9 @@ class LearnableImage(nn.Module):
                  height      :int,
                  width       :int,
                  num_channels:int):
+
+        #This is an abstract class
+
         super().__init__()
         
         self.height      =height      
@@ -210,6 +211,8 @@ class LearnableTexturePack(nn.Module):
                  num_textures:int   ,
                  get_learnable_image):
         
+        #This is an abstract class
+
         super().__init__()
         
         self.height      =height

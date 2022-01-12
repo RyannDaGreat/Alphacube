@@ -3,53 +3,71 @@ Copyright (C) 2018 NVIDIA Corporation.  All rights reserved.
 Licensed under the CC BY-NC-SA 4.0 license (https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode).
 """
 import math
-import os
-import os.path
 import random
-from collections import namedtuple
 
-import icecream
-import numpy
+import numpy as np
+import rp
 import torch
 import torch.utils.data as data
 import torchvision
+from PIL import Image, ImageDraw
 from torchvision import transforms
+from rp import (
+    as_float_image,
+    as_numpy_array,
+    as_rgb_image,
+    is_grayscale_image,
+    get_image_dimensions,
+    is_image,
+    is_image_file,
+    load_image,
+)
 
-import rp
-from rp import is_image_file
-
-from PIL import Image, ImageDraw#TODO: Eliminate ALL of these
 
 def default_loader(path):
-    return Image.open(path).convert('RGB')
+    #Unlike the original MUNIT implementation, this image loader
+    #supports floating-point images, and can load .exr files
+    return as_float_image(as_rgb_image(load_image(path)))
 
-
-###############################################################################
-# Code from
-# https://github.com/pytorch/vision/blob/master/torchvision/datasets/folder.py
-# Modified the original code so that it also loads images from the current
-# directory as well as the subdirectories
-###############################################################################
 
 def get_image_files(folder):
     return [x for x in rp.get_all_files(folder, sort_by='number') if rp.is_image_file(x)]
 
 
-def circleMask(img, ox, oy, radius):
-    assert     rp.is_image          (img)
-    assert not rp.is_grayscale_image(img)
+def circle_mask(img, ox, oy, radius):
+    #Takes in an image and 3 numbers
+    #Outputs an image
+    #
+    #ox, oy is the top left corner of a circle
+    #only the image img that circle is kept
+    #all other pixels are turned black
+    #
+    #this is a pure function: it does not mutate inputs
+    #example usage: https://pastebin.com/yTSmv1J0
 
-    mask = Image.new('L', img.size, 255)
+    assert     is_image          (img)
+    assert not is_grayscale_image(img)
+
+    img=as_numpy_array(img).copy()
+    img=as_float_image(img)
+
+    height, width = get_image_dimensions(img)
+
+    mask = Image.new('L', (width, height), 0)
     draw = ImageDraw.Draw(mask)
     
-    x0 = img.size[0] * 0.5 - radius + ox
-    x1 = img.size[0] * 0.5 + radius + ox
-    y0 = img.size[1] * 0.5 - radius + oy
-    y1 = img.size[1] * 0.5 + radius + oy
+    x0 = width  * 0.5 - radius + ox
+    x1 = width  * 0.5 + radius + ox
+    y0 = height * 0.5 - radius + oy
+    y1 = height * 0.5 + radius + oy
     
-    draw.ellipse([x0, y0, x1, y1], fill=0)
-    img.paste((0, 0, 0), mask=mask)
-    return img
+    draw.ellipse([x0, y0, x1, y1], fill=1)
+    
+    mask = as_numpy_array(mask)
+    mask = as_rgb_image  (mask)
+    mask = mask.astype(float)
+
+    return img * mask
 
 
 class ImageFolder(data.Dataset):
@@ -60,12 +78,14 @@ class ImageFolder(data.Dataset):
         loader       = default_loader,
         return_paths = False,
         augmentation = {},
+        precise      = False,
     ):
         imgs = get_image_files(root)
         if len(imgs) == 0:
             raise RuntimeError("Found 0 images in: " + root + "\n")
 
         self.root            = root
+        self.precise         = precise
         self.imgs            = imgs
         self.return_paths    = return_paths
         self.loader          = loader
@@ -92,28 +112,38 @@ class ImageFolder(data.Dataset):
         randSize = random.randint(self.new_size_min, self.new_size_max)
 
         if self.add_circle_mask:
-            minSize = min((img.width, img.height))
-            maxSize = max((img.width, img.height))
+            height, width = get_image_dimensions(img)
 
-            maxRadius = int(math.sqrt((img.width/2)**2 + (img.height/2)**2))
+            minSize = min((width, height))
+            maxSize = max((width, height))
+
+            maxRadius = int(math.sqrt((width/2)**2 + (height/2)**2))
             minRadius = int(0.4*maxSize)
             
             maskRadius = random.randint( minRadius, maxRadius )
 
-            maskOx = random.randint(int(-img.width  * 0.1), int(img.width  * 0.1))
-            maskOy = random.randint(int(-img.height * 0.1), int(img.height * 0.1))
+            maskOx = random.randint(int(-width  * 0.1), int(width  * 0.1))
+            maskOy = random.randint(int(-height * 0.1), int(height * 0.1))
 
-            img = circleMask(img, maskOx, maskOy, maskRadius)
+            img = circle_mask(img, maskOx, maskOy, maskRadius)
 
+        assert isinstance(img, np.ndarray)
+
+        img = img.astype(np.float32)
         img = transforms.functional.to_tensor(img)
 
         assert isinstance(img, torch.Tensor)
 
-        interp = transforms.InterpolationMode.NEAREST
+        if self.precise:
+            #We don't want blurry boundaries on the UV maps
+            interp = transforms.InterpolationMode.NEAREST
+        else:
+            interp = transforms.InterpolationMode.BILINEAR
 
         img = transforms.functional.resize(img, randSize, interp)
 
         if self.rotate:
+            # this is disabled from get_all_data_loaders in utils.py
             img = transforms.functional.rotate(img, randAng, interp)
         
         C,H,W=img.shape
@@ -123,12 +153,15 @@ class ImageFolder(data.Dataset):
 
         img = transforms.functional.crop(img, ry, rx, self.output_size[1], self.output_size[0])
 
-        if self.contrast:
-            c = random.uniform( 0.75, 1.25)
-            b = random.uniform(-0.1,  0.1 )
-            img = img * c + b
+        if not self.precise:
+            #We don't want to make UV maps brighter or dimmer, as this could cause arbitrary shifts in textures
+            if self.contrast:
+                # this is disabled from get_all_data_loaders in utils.py
+                c = random.uniform( 0.75, 1.25)
+                b = random.uniform(-0.1,  0.1 )
+                img = img * c + b
 
-        img = transforms.functional.normalize(img, (0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+            img = transforms.functional.normalize(img, (0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
 
         if self.return_paths:
             return img, path
