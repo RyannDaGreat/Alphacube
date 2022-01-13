@@ -16,13 +16,12 @@ from rp import (
     as_float_image,
     as_numpy_array,
     as_rgb_image,
-    is_grayscale_image,
     get_image_dimensions,
+    is_grayscale_image,
     is_image,
     is_image_file,
     load_image,
 )
-
 
 def default_loader(path):
     #Unlike the original MUNIT implementation, this image loader
@@ -161,7 +160,17 @@ class ImageFolder(data.Dataset):
                 b = random.uniform(-0.1,  0.1 )
                 img = img * c + b
 
+            
+            # As it turns out, functional.normalize applies the same shift to any image regardless of its contents
+            # The given mean and standard deviation are assumed to be the mean and standard deviation of the image
+            # Then, with that assumption, it will apply a linear pixel-wise transform to turn those statustics
+            # into the standard normal distribution: mean(0,0,0) std(0,0,0). 
+            # Because it doesn't rely on the img itself, it means it's fully reversable without knowledge of the 
+            # original input statistics.
+            # TLDR: if I'm correct, the following line is equivalent to:
+            #     img = img * 2 - 1
             img = transforms.functional.normalize(img, (0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+
 
         if self.return_paths:
             return img, path

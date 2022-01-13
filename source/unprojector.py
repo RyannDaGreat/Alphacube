@@ -70,9 +70,9 @@ def unproject_translations(scene_translations : torch.Tensor,
     assert scene_translations.shape == (batch_size, num_channels, scene_height, scene_width)
 
     #Validate integer arguments
-    assert num_labels    >= 1 and isinstance(num_labels   ,int)
-    assert output_height >= 1 and isinstance(output_height,int)
-    assert output_width  >= 1 and isinstance(output_width ,int)
+    assert num_labels    >= 1
+    assert output_height >= 1
+    assert output_width  >= 1
 
     #Validate version
     assert version in ['fast','slow']

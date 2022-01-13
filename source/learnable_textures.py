@@ -89,7 +89,7 @@ class LearnableImage(nn.Module):
                  width       :int,
                  num_channels:int):
 
-        #This is an abstract class
+        #This is an abstract class, and is meant to be subclassed before use
 
         super().__init__()
         
@@ -132,7 +132,7 @@ class LearnableImageMLP(LearnableImage):
         super().__init__(height,width,num_channels)
         
         self.hidden_dim  =hidden_dim
-        self.device      =device or 'gpu' if torch.cuda.is_available() else 'cpu'
+        self.device      =device or 'cuda' if torch.cuda.is_available() else 'cpu'
         
         # The following Tensor is NOT a parameter, and is not changed while optimizing this class
         self.xy_grid=get_xy_grid(height,width,batch_size=1).to(self.device)
@@ -168,7 +168,7 @@ class LearnableImageFourier(LearnableImage):
         self.hidden_dim  =hidden_dim
         self.mapping_size=mapping_size
         self.scale       =scale
-        self.device      =device or 'gpu' if torch.cuda.is_available() else 'cpu'
+        self.device      =device or 'cuda' if torch.cuda.is_available() else 'cpu'
         
         # The following objects do NOT have parameters, and are not changed while optimizing this class
         self.xy_grid =get_xy_grid(height,width,batch_size=1).to(device)
@@ -195,7 +195,7 @@ class LearnableImageFourier(LearnableImage):
     
     def forward(self):
         # Return all the image we've learned
-        return self.model(self.features).squeeze(0).permute(1,2,0)
+        return self.model(self.features).squeeze(0)
     
     
 ###############################
@@ -211,7 +211,8 @@ class LearnableTexturePack(nn.Module):
                  num_textures:int   ,
                  get_learnable_image):
         
-        #This is an abstract class
+        #This is an abstract class, and is meant to be subclassed before use
+        #TODO: Inherit from some list class, such as nn.ModuleList. That way we can access learnable_images by indexing them from self...
 
         super().__init__()
         
@@ -234,9 +235,13 @@ class LearnableTexturePack(nn.Module):
         #Where NT=self.num_textures, NC=self.num_channels, H=self.height, W=self.width
         
         output = torch.stack(tuple(x() for x in self.learnable_images))
-        assert output.shape==(self.num_textures, self.num_channels, self.height, self.width)
+        assert output.shape==(self.num_textures, self.num_channels, self.height, self.width), str("WTF? "+str(output.shape)+" IS NOT "+str((self.num_textures, self.num_channels, self.height, self.width)))
         
         return output
+
+    def __len__(self):
+        #Returns the number of textures in the texture pack
+        return len(self.learnable_images)
 
     
 class LearnableTexturePackRaster(LearnableTexturePack):
