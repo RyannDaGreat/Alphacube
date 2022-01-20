@@ -1,0 +1,7 @@
+I made the renderer in the gen but NOT in anything else, such as the translations.py or the discriminator trainer!
+It HAS to be EVERYWHERE!
+TODO:
+    Make a more serious attempt. Don't rush this.
+    We need image outputs for 6 channels. Why don't we start here? Have 6-channel inputs. Also, render the textures. Try all of that.
+    Then, solve the NAN problem. Why are there NAN's?
+   
