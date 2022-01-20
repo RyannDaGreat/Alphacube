@@ -7,59 +7,26 @@ Licensed under the CC BY-NC-SA 4.0 license (https://creativecommons.org/licenses
 from networks import AdaINGen, MsImageDis, VAEGen, StylelessGen, ResBlockSegmentation
 from utils import weights_init, get_model_list, get_scheduler
 from utils import __write_images as writeImage
-from pytorch_msssim import msssim, ssim
 from torch.autograd import Variable
-
-import os
+from pytorch_msssim import msssim, ssim
 import torch
-import random
-import torchvision
 import torch.nn as nn
-
-import upper.source.projector          as projector
-import upper.source.unprojector        as unprojector
-import upper.source.scene_reader       as scene_reader
-import upper.source.view_consistency   as view_consistency
-import upper.source.learnable_textures as learnable_textures
-
-
-label_values = [0,255]
-texture_loss_weight = 20
+import os
+import torchvision
+import random
 
 class MUNIT_Trainer(nn.Module):
     def __init__(self, hyperparameters):
-
-        super().__init__()
-
-
-        ###########################
-        ####### RYAN'S CODE #######
-        ###########################
-
-        #TODO: Connect the config to change the height, width, num_channels etc of the learnable textures
-        self.texture_pack = learnable_textures.LearnableTexturePackFourier(num_textures=len(label_values)) 
-
-        a_num_channels = hyperparameters['input_dim_a']#+self.texture_pack.num_channels
-        b_num_channels = hyperparameters['input_dim_b']
-        self.view_consistency_loss = view_consistency.ViewConsistencyLoss(recovery_width = 128, recovery_height = 128)
-
-        print("BATCH SIZE",hyperparameters['batch_size'])
-        if not hyperparameters['batch_size']>1:print( "batch_size must be MORE than 1, but its %i"%hyperparameters['batch_size'])
-
-
-        #############################
-        ####### ORIGINAL CODE #######
-        #############################
-
+        super(MUNIT_Trainer, self).__init__()
         lr = hyperparameters['lr']
 
         # Initiate the networks
-        self.gen_a = StylelessGen(a_num_channels, hyperparameters['gen'])  # auto-encoder for domain a
-        self.gen_b = StylelessGen(b_num_channels, hyperparameters['gen'])  # auto-encoder for domain b
+        self.gen_a = StylelessGen(hyperparameters['input_dim_a'], hyperparameters['gen'])  # auto-encoder for domain a
+        self.gen_b = StylelessGen(hyperparameters['input_dim_b'], hyperparameters['gen'])  # auto-encoder for domain b
         # self.gen_b = AdaINGen  (hyperparameters['input_dim_b'], hyperparameters['gen'])  # auto-encoder for domain b
 
-        self.dis_a = MsImageDis(a_num_channels, hyperparameters['dis']) # discriminator for domain a
-        self.dis_b = MsImageDis(b_num_channels, hyperparameters['dis']) # discriminator for domain b
+        self.dis_a = MsImageDis(hyperparameters['input_dim_a'], hyperparameters['dis']) # discriminator for domain a
+        self.dis_b = MsImageDis(hyperparameters['input_dim_b'], hyperparameters['dis']) # discriminator for domain b
 
         self.instancenorm = nn.InstanceNorm2d(512, affine=False)
 
@@ -73,17 +40,11 @@ class MUNIT_Trainer(nn.Module):
         # Setup the optimizers
         beta1 = hyperparameters['beta1']
         beta2 = hyperparameters['beta2']
-
         dis_params = list(self.dis_a.parameters()) + list(self.dis_b.parameters())
         gen_params = list(self.gen_a.parameters()) + list(self.gen_b.parameters())
 
-        dis_params = [p for p in dis_params if p.requires_grad]
-        gen_params = [p for p in gen_params if p.requires_grad]
-        tex_params = list(self.texture_pack.parameters())
-
-        self.dis_opt = torch.optim.Adam(dis_params, lr=lr   , betas=(beta1, beta2), weight_decay=hyperparameters['weight_decay'])
-        self.gen_opt = torch.optim.Adam(gen_params, lr=lr   , betas=(beta1, beta2), weight_decay=hyperparameters['weight_decay'])
-        self.tex_opt = torch.optim.Adam(tex_params, lr=lr*10, betas=(beta1, beta2), weight_decay=hyperparameters['weight_decay'])
+        self.dis_opt = torch.optim.Adam([p for p in dis_params if p.requires_grad], lr=lr, betas=(beta1, beta2), weight_decay=hyperparameters['weight_decay'])
+        self.gen_opt = torch.optim.Adam([p for p in gen_params if p.requires_grad], lr=lr, betas=(beta1, beta2), weight_decay=hyperparameters['weight_decay'])
 
         self.dis_scheduler = get_scheduler(self.dis_opt, hyperparameters)
         self.gen_scheduler = get_scheduler(self.gen_opt, hyperparameters)
@@ -95,10 +56,8 @@ class MUNIT_Trainer(nn.Module):
 
         self.label_criterion = nn.CrossEntropyLoss()
 
-
     def recon_criterion(self, input, target):
         return torch.mean(torch.abs(input - target))
-
 
     def forward(self, x_a, x_b):
         self.eval()
@@ -116,36 +75,8 @@ class MUNIT_Trainer(nn.Module):
         self.train()
         return x_ab, x_ba
 
-
     def gen_update(self, x_a, x_b, hyperparameters, useLabelLoss=False):
 
-
-        ###########################
-        ####### RYAN'S CODE #######
-        ###########################
-
-        #Because precise=True, x_a should be in the range (0,1) and x_b should be in the range (-1,1) because precise=False for that domain (see utils.py)
-
-        scene_uvs, scene_labels = scene_reader.extract_scene_uvs_and_scene_labels(scene_images = x_a         ,
-                                                                                  label_values = label_values)
-
-        texture_pack=self.texture_pack()
-
-        scene_projections = projector.project_textures(scene_uvs, scene_labels, texture_pack)
-
-        x_a = x_a * 2 - 1 #Convert from 0,1 range to -1,1 range
-        x_a = torch.stack((x_a,scene_projections), dim=1) #Add projected textures
-
-        x_a = scene_projections #Let's try to minimize effort right now...let's just use 3 channels for visualization etc... TODO make all 6:
-            # that involves creating more visualizations for all 6 channels and textures
-
-        self.tex_opt.zero_grad()
-
-
-        #############################
-        ####### ORIGINAL CODE #######
-        #############################
-        
         self.gen_opt.zero_grad()
 
         s_b = torch.randn(x_b.size(0), self.style_dim, 1, 1).cuda()
@@ -200,15 +131,6 @@ class MUNIT_Trainer(nn.Module):
         # GAN loss
         loss_gen_adv_b = self.dis_b.calc_gen_loss(x_ab)
 
-        
-        #View Consistency Loss
-        loss_view_consistency = self.view_consistency_loss(x_ab, scene_uvs, scene_labels)
-
-        if (loss_view_consistency.isnan() | loss_view_consistency.isinf()).any(): print("view consistency has nan or inf")
-
-        # loss_view_consistency=0 #TODO: Uncommenting this line causes the PREVIOUS line to trigger (the nan warning). This must be mutating loss_view_consistency somehow....how???
-        
-        #Total loss
         loss_gen_total = hyperparameters['gan_w'        ] * loss_gen_adv_a        + \
                          hyperparameters['gan_w'        ] * loss_gen_adv_b        + \
                          hyperparameters['recon_x_w'    ] * loss_gen_recon_x_a    + \
@@ -218,16 +140,13 @@ class MUNIT_Trainer(nn.Module):
                          hyperparameters['recon_x_cyc_w'] * loss_gen_cycrecon_x_a + \
                          hyperparameters['recon_x_cyc_w'] * loss_gen_cycrecon_x_b + \
                          hyperparameters['ms_ssim_a_w'  ] * loss_msssim_ab        + \
-                         hyperparameters['ms_ssim_b_w'  ] * loss_msssim_ba        + \
-                         texture_loss_weight              * loss_view_consistency
+                         hyperparameters['ms_ssim_b_w'  ] * loss_msssim_ba
                          # hyperparameters['recon_s_w'    ] * loss_gen_recon_s_b    + \
+
         loss_gen_total.backward()
 
-        self.tex_opt.step()
         self.gen_opt.step()
 
-
-        #Unimportant code:
         self.loss_gen_adv_a        = loss_gen_adv_a       .item()
         self.loss_gen_adv_b        = loss_gen_adv_a       .item()
         self.loss_gen_recon_x_a    = loss_gen_recon_x_a   .item()
@@ -239,8 +158,8 @@ class MUNIT_Trainer(nn.Module):
         self.loss_gen_cycrecon_x_b = loss_gen_cycrecon_x_b.item()
         self.loss_msssim_ab        = loss_msssim_ab       .item()
         self.loss_msssim_ba        = loss_msssim_ba       .item()
-        self.loss_gen_total = loss_gen_total.item()
 
+        self.loss_gen_total = loss_gen_total.item()
 
     def sample(self, x_a, x_b):
 
@@ -261,14 +180,14 @@ class MUNIT_Trainer(nn.Module):
             c_b= self.gen_b.encode(x_b_)
 
             # x_ab_          = self.gen_b.decode(c_a, s_b_)     # translate
-            x_ab_          = self.gen_b.decode(c_a   ) # translate
-            c_ab           = self.gen_b.encode(x_ab_ ) # re-encode
+            x_ab_          = self.gen_b.decode(c_a)     # translate
+            c_ab           = self.gen_b.encode(x_ab_) # re-encode
             # c_ab, s_b_fake = self.gen_b.encode(x_ab_) # re-encode
-            x_aba_         = self.gen_a.decode(c_ab  ) # translate back
+            x_aba_         = self.gen_a.decode(c_ab ) # translate back
 
-            x_a_recon.append(x_a_recon_ )
-            x_ab     .append(x_ab_      )
-            x_aba    .append(x_aba_     )
+            x_a_recon.append(x_a_recon_)
+            x_ab     .append(x_ab_)
+            x_aba    .append(x_aba_    )
 
             # Encode another x_ab2 with a style drawn from b:
             x_ab_rand_ = self.gen_b.decode(c_a)     # translate
@@ -276,13 +195,13 @@ class MUNIT_Trainer(nn.Module):
             x_ab_rand.append( x_ab_rand_ )
 
             # b to a:
-            x_ba_ = self.gen_a.decode(c_b   ) # translate
-            c_ba  = self.gen_a.encode(x_ba_ ) # re-encode
+            x_ba_ = self.gen_a.decode(c_b)      # translate
+            c_ba  = self.gen_a.encode(x_ba_)   # re-encode
 
             # x_b_recon_ = self.gen_b.decode(c_b, s_b_extract)      # Reconstruct in same domain
             # x_bab_     = self.gen_b.decode(c_ba, s_b_extract)    # translate back
-            x_b_recon_ = self.gen_b.decode(c_b  ) # Reconstruct in same domain
-            x_bab_     = self.gen_b.decode(c_ba ) # translate back
+            x_b_recon_ = self.gen_b.decode(c_b)      # Reconstruct in same domain
+            x_bab_     = self.gen_b.decode(c_ba)    # translate back
 
             x_b_recon.append(x_b_recon_)
             x_ba     .append(x_ba_)
@@ -301,7 +220,6 @@ class MUNIT_Trainer(nn.Module):
         self.train()
 
         return x_a, x_a_recon, x_ab, x_ab_rand, x_aba, x_b, x_b_recon, x_ba, x_bab
-
 
     def dis_update(self, x_a, x_b, hyperparameters):
         self.dis_opt.zero_grad()
@@ -325,17 +243,13 @@ class MUNIT_Trainer(nn.Module):
         self.loss_dis_total.backward()
         self.dis_opt.step()
 
-
     def update_learning_rate(self):
         if self.dis_scheduler is not None:
             self.dis_scheduler.step()
         if self.gen_scheduler is not None:
             self.gen_scheduler.step()
 
-
     def resume(self, checkpoint_dir, hyperparameters):
-        #TODO: Integreate this with textures...or better yet, simply make it save the weights of self...
-
         # Load generators
         last_model_name = get_model_list(checkpoint_dir, "gen")
         state_dict = torch.load(last_model_name)
@@ -359,7 +273,6 @@ class MUNIT_Trainer(nn.Module):
         self.gen_scheduler = get_scheduler(self.gen_opt, hyperparameters, iterations)
         print('Resume from iteration %d' % iterations)
         return iterations
-
 
     def save(self, snapshot_dir, iterations):
         # Save generators, discriminators, and optimizers
