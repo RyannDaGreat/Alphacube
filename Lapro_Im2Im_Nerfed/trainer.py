@@ -43,6 +43,9 @@ class MUNIT_Trainer(nn.Module):
         b_num_channels = hyperparameters['input_dim_b']
         self.view_consistency_loss = view_consistency.ViewConsistencyLoss(recovery_width = 128, recovery_height = 128)
 
+        print("BATCH SIZE",hyperparameters['batch_size'])
+        if not hyperparameters['batch_size']>1:print( "batch_size must be MORE than 1, but its %i"%hyperparameters['batch_size'])
+
 
         #############################
         ####### ORIGINAL CODE #######
@@ -201,6 +204,10 @@ class MUNIT_Trainer(nn.Module):
         #View Consistency Loss
         loss_view_consistency = self.view_consistency_loss(x_ab, scene_uvs, scene_labels)
 
+        if (loss_view_consistency.isnan() | loss_view_consistency.isinf()).any(): print("view consistency has nan or inf")
+
+        # loss_view_consistency=0 #TODO: Uncommenting this line causes the PREVIOUS line to trigger (the nan warning). This must be mutating loss_view_consistency somehow....how???
+        
         #Total loss
         loss_gen_total = hyperparameters['gan_w'        ] * loss_gen_adv_a        + \
                          hyperparameters['gan_w'        ] * loss_gen_adv_b        + \
