@@ -67,7 +67,6 @@ def get_all_data_loaders(conf):
         train_loader_a = get_loader(aug.copy(), 'train_fake', train=True , precise=True )
         aug["circle_mask" ] = False
         train_loader_b = get_loader(aug.copy(), 'test_fake' , train=False, precise=True )
-
         aug["new_size_min"] = conf["new_size_min_b"]
         aug["new_size_max"] = conf["new_size_max_b"]
         test_loader_a  = get_loader(aug.copy(), 'train_real', train=True , precise=False)
