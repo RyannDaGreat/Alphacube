@@ -4,16 +4,18 @@
 Copyright (C) 2017 NVIDIA Corporation.  All rights reserved.
 Licensed under the CC BY-NC-SA 4.0 license (https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode).
 """
-from networks import AdaINGen, MsImageDis, VAEGen, StylelessGen, ResBlockSegmentation
-from utils import weights_init, get_model_list, get_scheduler
-from utils import __write_images as writeImage
-from torch.autograd import Variable
-from pytorch_msssim import msssim, ssim
+
+import os
 import torch
 import torch.nn as nn
-import os
-import torchvision
-import random
+
+from pytorch_msssim import msssim
+from networks       import MsImageDis, StylelessGen
+from utils          import get_model_list, get_scheduler, weights_init
+
+# import random
+# from networks import AdaINGen
+# from torch.autograd import Variable
 
 class MUNIT_Trainer(nn.Module):
     def __init__(self, hyperparameters):
@@ -62,7 +64,7 @@ class MUNIT_Trainer(nn.Module):
     def forward(self, x_a, x_b):
         self.eval()
         #s_a = Variable(self.s_a)
-        s_b = Variable(self.s_b)
+        # s_b = Variable(self.s_b)
 
         c_a = self.gen_a.encode(x_a)
         c_b = self.gen_b.encode(x_b)
@@ -79,7 +81,7 @@ class MUNIT_Trainer(nn.Module):
 
         self.gen_opt.zero_grad()
 
-        s_b = torch.randn(x_b.size(0), self.style_dim, 1, 1).cuda()
+        # s_b = torch.randn(x_b.size(0), self.style_dim, 1, 1).cuda()
 
         # encode
         c_a = self.gen_a.encode(x_a)
@@ -164,13 +166,13 @@ class MUNIT_Trainer(nn.Module):
     def sample(self, x_a, x_b):
 
         self.eval()
-        s_b = self.s_b
+        # s_b = self.s_b
         x_a_recon, x_b_recon, x_ba, x_bab, x_ab, x_aba, x_ab_rand = [], [], [], [], [], [], []
         for i in range(x_a.size(0)):
             # get individual images from list:
             x_a_ = x_a[i].unsqueeze(0)
             x_b_ = x_b[i].unsqueeze(0)
-            s_b_ = s_b[i].unsqueeze(0)
+            # s_b_ = s_b[i].unsqueeze(0)
 
             # a to b:
             c_a        = self.gen_a.encode(x_a_)
@@ -224,7 +226,7 @@ class MUNIT_Trainer(nn.Module):
     def dis_update(self, x_a, x_b, hyperparameters):
         self.dis_opt.zero_grad()
         #s_a = Variable(torch.randn(x_a.size(0), self.style_dim, 1, 1).cuda())
-        s_b = Variable(torch.randn(x_b.size(0), self.style_dim, 1, 1).cuda())
+        # s_b = Variable(torch.randn(x_b.size(0), self.style_dim, 1, 1).cuda())
         # encode
         c_a = self.gen_a.encode(x_a)
         c_b = self.gen_b.encode(x_b)
