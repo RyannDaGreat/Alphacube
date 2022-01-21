@@ -706,9 +706,9 @@ class SpectralNorm(nn.Module):
 
     def _made_params(self):
         try:
-            u = getattr(self.module, self.name + "_u")
-            v = getattr(self.module, self.name + "_v")
-            w = getattr(self.module, self.name + "_bar")
+            getattr(self.module, self.name + "_u")
+            getattr(self.module, self.name + "_v")
+            getattr(self.module, self.name + "_bar")
             return True
         except AttributeError:
             return False
