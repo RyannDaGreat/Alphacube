@@ -3,4 +3,3 @@ Lapro_Im2Im_Nerfed/trained_models/
 # Ignore all pycaches: https://stackoverflow.com/questions/56309100/how-to-ignore-the-same-name-directory-pycache-in-a-project
 **/__pycache__/
 __pycache__/
-Lapro_Im2Im_Nerfed/__pycache__
