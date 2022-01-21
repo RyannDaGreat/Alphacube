@@ -19,7 +19,6 @@ from rp import (
     get_image_dimensions,
     is_grayscale_image,
     is_image,
-    is_image_file,
     load_image,
 )
 
