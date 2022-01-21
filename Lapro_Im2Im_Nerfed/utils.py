@@ -45,16 +45,16 @@ def get_all_data_loaders(conf):
     height      = conf['crop_image_height']
     width       = conf['crop_image_width']
 
-    def get_loader(augmentation, folder_name, load_paths, precise):
+    def get_loader(augmentation, folder_name, train, precise):
 
         input_folder = os.path.join(conf["data_root"], folder_name)
 
-        return get_data_loader_folder(input_folder,
-                                      batch_size  ,
-                                      load_paths  ,
-                                      num_workers ,
-                                      augmentation,
-                                      precise     )
+        return get_data_loader_folder(input_folder               ,
+                                      batch_size                 ,
+                                      train                      ,
+                                      num_workers  = num_workers ,
+                                      augmentation = augmentation,
+                                      precise      = precise     )
 
     if 'data_root' in conf:
         aug = {}
@@ -64,14 +64,14 @@ def get_all_data_loaders(conf):
         aug["circle_mask" ] = True
         aug["rotate"      ] = False
         aug["contrast"    ] = False
-        train_loader_a = get_loader(aug.copy(), 'train_fake', load_paths=True , precise=True )
+        train_loader_a = get_loader(aug.copy(), 'train_fake', train=True , precise=True )
         aug["circle_mask" ] = False
-        train_loader_b = get_loader(aug.copy(), 'test_fake' , load_paths=False, precise=True )
+        train_loader_b = get_loader(aug.copy(), 'test_fake' , train=False, precise=True )
 
         aug["new_size_min"] = conf["new_size_min_b"]
         aug["new_size_max"] = conf["new_size_max_b"]
-        test_loader_a  = get_loader(aug.copy(), 'train_real', load_paths=True , precise=False)
-        test_loader_b  = get_loader(aug.copy(), 'test_real' , load_paths=False, precise=False)
+        test_loader_a  = get_loader(aug.copy(), 'train_real', train=True , precise=False)
+        test_loader_b  = get_loader(aug.copy(), 'test_real' , train=False, precise=False)
 
         print("train_loader_a", len(train_loader_a))
         print("train_loader_b", len(train_loader_b))
