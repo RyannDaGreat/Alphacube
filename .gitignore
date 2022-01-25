@@ -8,3 +8,11 @@ __pycache__/
 #Ignore all vim swp files. I'm going to keep .un files though
 **/*.swp
 *.swp
+
+#Ignore all vim swp files. I'm going to keep .un files though
+**/*.swp
+*.swp
+
+#Ignore all .ipynb_checkpoints/
+**/.ipynb_checkpoints/
+.ipynb_checkpoints/
