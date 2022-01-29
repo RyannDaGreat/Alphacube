@@ -61,6 +61,7 @@ class GaussianFourierFeatureTransform:
     
 def get_xy_grid(height:int, width:int, batch_size:int=1)->torch.Tensor:
     #Returns a torch cpu tensor of shape (batch_size,2,height,width)
+    #Note: batch_size can probably be removed from this function after refactoring this file. It's always 1 in all usages.
     #The second dimension is (x,y) coordinates, which go from [0 to 1) from edge to edge
     #(In other words, it will include x=y=0, but instead of x=y=1 the other corner will be x=y=.999)
     #(this is so it doesn't wrap around the texture 360 degrees)
@@ -90,6 +91,7 @@ class LearnableImage(nn.Module):
                  num_channels:int):
 
         #This is an abstract class, and is meant to be subclassed before use
+        #Upon calling forward(), retuns a tensor of shape (num_channels, height, width)
 
         super().__init__()
         
@@ -114,10 +116,14 @@ class LearnableImageRaster(LearnableImage):
         
         #An image paramterized by pixels
 
-        self.image=nn.Parameter(torch.rand(height,width,num_channels))
+        self.image=nn.Parameter(torch.rand(num_channels,height,width))
         
     def forward(self):
-        return self.image
+        output = self.image
+        
+        assert output.shape==(self.num_channels, self.height, self.width)
+        
+        return output
     
     
 class LearnableImageMLP(LearnableImage):
@@ -148,7 +154,11 @@ class LearnableImageMLP(LearnableImage):
             ).to(self.device)
             
     def forward(self):
-        return self.model(self.xy_grid)
+        output = self.model(self.xy_grid).squeeze(0)
+        
+        assert output.shape==(self.num_channels, self.height, self.width)
+        
+        return output
     
     
 class LearnableImageFourier(LearnableImage):
@@ -189,13 +199,17 @@ class LearnableImageFourier(LearnableImage):
     def project(self,uv_maps):
         #TODO: Check if this function works well...
         #Right now consider it untested
-        assert len(uv_maps.shape)==(4)
-        assert uv_maps.shape[1]==2 # Should have two channels: u,v
+        assert len(uv_maps.shape)==(4), 'uv_maps should be BCHW'
+        assert uv_maps.shape[1]==2, 'Should have two channels: u,v'
         return self.model(self.feature_extractor(uv_maps))
     
     def forward(self):
-        # Return all the image we've learned
-        return self.model(self.features).squeeze(0)
+        # Return all the images we've learned
+        output = self.model(self.features).squeeze(0)
+        
+        assert output.shape==(self.num_channels, self.height, self.width)
+        
+        return output
     
     
 ###############################
