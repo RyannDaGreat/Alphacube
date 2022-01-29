@@ -5,18 +5,19 @@ Lapro_Im2Im_Nerfed/trained_models/
 **/__pycache__/
 __pycache__/
 
-#Ignore all vim swp files. I'm going to keep .un files though
-**/*.swp
-*.swp
-
-#Ignore all vim .un~ files (these are vim undo files)
-**/*.un~
-*.un~
+#Ignore all .virtual_documents/
+.virtual_documents/
+**/.virtual_documents/
 
 #Ignore all .ipynb_checkpoints/
 **/.ipynb_checkpoints/
 .ipynb_checkpoints/
 
-#Ignore all .virtual_documents/
-.virtual_documents/
-**/.virtual_documents/
+#Ignore all vim swp files. I'm going to keep .un files though
+**/*.swp
+*.swp
+
+#Ignore all vim .un~ files (these are vim undo files)
+# **/*.un~
+# *.un~
+#NOTE: I'm keeping .un~ files so that I still have undo history when checking out previous commits.
