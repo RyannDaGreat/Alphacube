@@ -1,5 +1,3 @@
-#TODO: Modify this to learn multiple textures at once as one tensor
-
 import torch
 import torch.nn as nn
 import numpy as np
@@ -63,6 +61,7 @@ class GaussianFourierFeatureTransform:
     
 def get_xy_grid(height:int, width:int, batch_size:int=1)->torch.Tensor:
     #Returns a torch cpu tensor of shape (batch_size,2,height,width)
+    #Note: batch_size can probably be removed from this function after refactoring this file. It's always 1 in all usages.
     #The second dimension is (x,y) coordinates, which go from [0 to 1) from edge to edge
     #(In other words, it will include x=y=0, but instead of x=y=1 the other corner will be x=y=.999)
     #(this is so it doesn't wrap around the texture 360 degrees)
@@ -90,6 +89,10 @@ class LearnableImage(nn.Module):
                  height      :int,
                  width       :int,
                  num_channels:int):
+
+        #This is an abstract class, and is meant to be subclassed before use
+        #Upon calling forward(), retuns a tensor of shape (num_channels, height, width)
+
         super().__init__()
         
         self.height      =height      
@@ -113,10 +116,14 @@ class LearnableImageRaster(LearnableImage):
         
         #An image paramterized by pixels
 
-        self.image=nn.Parameter(torch.rand(height,width,num_channels))
+        self.image=nn.Parameter(torch.rand(num_channels,height,width))
         
     def forward(self):
-        return self.image
+        output = self.image
+        
+        assert output.shape==(self.num_channels, self.height, self.width)
+        
+        return output
     
     
 class LearnableImageMLP(LearnableImage):
@@ -131,7 +138,7 @@ class LearnableImageMLP(LearnableImage):
         super().__init__(height,width,num_channels)
         
         self.hidden_dim  =hidden_dim
-        self.device      =device or 'gpu' if torch.cuda.is_available() else 'cpu'
+        self.device      =device or 'cuda' if torch.cuda.is_available() else 'cpu'
         
         # The following Tensor is NOT a parameter, and is not changed while optimizing this class
         self.xy_grid=get_xy_grid(height,width,batch_size=1).to(self.device)
@@ -147,7 +154,11 @@ class LearnableImageMLP(LearnableImage):
             ).to(self.device)
             
     def forward(self):
-        return self.model(self.xy_grid)
+        output = self.model(self.xy_grid).squeeze(0)
+        
+        assert output.shape==(self.num_channels, self.height, self.width)
+        
+        return output
     
     
 class LearnableImageFourier(LearnableImage):
@@ -167,7 +178,7 @@ class LearnableImageFourier(LearnableImage):
         self.hidden_dim  =hidden_dim
         self.mapping_size=mapping_size
         self.scale       =scale
-        self.device      =device or 'gpu' if torch.cuda.is_available() else 'cpu'
+        self.device      =device or 'cuda' if torch.cuda.is_available() else 'cpu'
         
         # The following objects do NOT have parameters, and are not changed while optimizing this class
         self.xy_grid =get_xy_grid(height,width,batch_size=1).to(device)
@@ -188,13 +199,17 @@ class LearnableImageFourier(LearnableImage):
     def project(self,uv_maps):
         #TODO: Check if this function works well...
         #Right now consider it untested
-        assert len(uv_maps.shape)==(4)
-        assert uv_maps.shape[1]==2 # Should have two channels: u,v
+        assert len(uv_maps.shape)==(4), 'uv_maps should be BCHW'
+        assert uv_maps.shape[1]==2, 'Should have two channels: u,v'
         return self.model(self.feature_extractor(uv_maps))
     
     def forward(self):
-        # Return all the image we've learned
-        return self.model(self.features).squeeze(0).permute(1,2,0)
+        # Return all the images we've learned
+        output = self.model(self.features).squeeze(0)
+        
+        assert output.shape==(self.num_channels, self.height, self.width)
+        
+        return output
     
     
 ###############################
@@ -210,6 +225,9 @@ class LearnableTexturePack(nn.Module):
                  num_textures:int   ,
                  get_learnable_image):
         
+        #This is an abstract class, and is meant to be subclassed before use
+        #TODO: Inherit from some list class, such as nn.ModuleList. That way we can access learnable_images by indexing them from self...
+
         super().__init__()
         
         self.height      =height
@@ -231,9 +249,13 @@ class LearnableTexturePack(nn.Module):
         #Where NT=self.num_textures, NC=self.num_channels, H=self.height, W=self.width
         
         output = torch.stack(tuple(x() for x in self.learnable_images))
-        assert output.shape==(self.num_textures, self.num_channels, self.height, self.width)
+        assert output.shape==(self.num_textures, self.num_channels, self.height, self.width), str("WTF? "+str(output.shape)+" IS NOT "+str((self.num_textures, self.num_channels, self.height, self.width)))
         
         return output
+
+    def __len__(self):
+        #Returns the number of textures in the texture pack
+        return len(self.learnable_images)
 
     
 class LearnableTexturePackRaster(LearnableTexturePack):
