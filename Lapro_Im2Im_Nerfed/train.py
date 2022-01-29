@@ -2,20 +2,19 @@
 Copyright (C) 2018 NVIDIA Corporation.  All rights reserved.
 Licensed under the CC BY-NC-SA 4.0 license (https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode).
 """
-from utils import get_all_data_loaders, prepare_sub_folder, write_html, write_loss, get_config, write_2images, Timer
+
 import argparse
-from trainer import MUNIT_Trainer
-import torch.backends.cudnn as cudnn
-import torch
-try:
-    from itertools import izip as zip
-except ImportError: # will be 3.x series
-    pass
 import os
-import sys
-import tensorboardX
-import shutil
 import random
+import shutil
+import sys
+
+import tensorboardX
+import torch
+import torch.backends.cudnn as cudnn
+
+from trainer import MUNIT_Trainer
+from utils import get_all_data_loaders, prepare_sub_folder, write_html, write_loss, get_config, write_2images, Timer
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--config', type=str, default='configs/simulation2surgery.yaml', help='Path to the config file.')
