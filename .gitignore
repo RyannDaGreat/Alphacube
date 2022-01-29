@@ -9,10 +9,14 @@ __pycache__/
 **/*.swp
 *.swp
 
-#Ignore all vim swp files. I'm going to keep .un files though
-**/*.swp
-*.swp
+#Ignore all vim .un~ files (these are vim undo files)
+**/*.un~
+*.un~
 
 #Ignore all .ipynb_checkpoints/
 **/.ipynb_checkpoints/
 .ipynb_checkpoints/
+
+#Ignore all .virtual_documents/
+.virtual_documents/
+**/.virtual_documents/
