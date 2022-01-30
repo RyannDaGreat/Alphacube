@@ -2,6 +2,7 @@ import torch.nn as nn
 import torch
 from .unprojector import unproject_translations_individually
 
+epsilon=.01
 
 def weighted_mean(images, weights):
     #Takes BCHW images and BHW weights and returns a pixel-wise CHW average
@@ -12,6 +13,7 @@ def weighted_mean(images, weights):
     denominator = weights.sum(dim=0)[None]            # 1HW tensor
     
     denominator[denominator==0] = 1 #Get rid of 0's in denominator
+    denominator = denominator + epsilon #The previous line should be enough...but it's not. Alone, puts NAN's in the gradient...
     # When a particular pixel has 0 weight in any image, the output pixel is black
     
     return numerator/denominator
@@ -29,10 +31,13 @@ def weighted_variance(images, weights):
     numerator   = (squared_diff*weights[:,None]).sum(dim=0) # CHW tensor
     denominator = weights.sum(dim=0)[None]                  # 1HW tensor
     
-    denominator[denominator==0] = 1 #Get rid of 0's in denominator
+    denominator[denominator==0] = 1 #Get rid of 0's in denominator.
+    denominator = denominator + epsilon #The previous line should be enough...but it's not. Alone, it puts NAN's in the gradient...
     
     return numerator/denominator
 
+def is_bad(x):
+    return (x.isnan() | x.isinf()).any()
 
 class ViewConsistencyLoss(nn.Module):
     def __init__(self, recovery_width:int=256, recovery_height:int=256, version='std'):
@@ -65,8 +70,15 @@ class ViewConsistencyLoss(nn.Module):
             variances.append(weighted_variance(recovered_texture_packs[:,i],recovered_weight_packs[:,i]))
         variances=torch.stack(variances)
 
+        
+        if is_bad(variances):
+            print("WAMBO WAMBO WAMBO WAMBO WAMBO")
+        import icecream
+        icecream.ic(variances.min(),variances.max())
+
+
         #The actual value of the output doesn't have much meaning. However, its gradient definitely does.
         if self.version=='var': return torch.mean(variances    )        
         if self.version=='std': return torch.mean(variances**.5)
     
-        assert False, 'This line is unreachable' 
+        assert False, 'This line is unreachable'

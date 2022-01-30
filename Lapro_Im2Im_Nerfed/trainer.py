@@ -11,8 +11,10 @@ from pytorch_msssim import msssim, ssim
 from torch.autograd import Variable
 
 import os
+import rp
 import torch
 import random
+import icecream
 import torch.nn as nn
 
 import upper.source.projector          as projector
@@ -22,12 +24,16 @@ import upper.source.view_consistency   as view_consistency
 import upper.source.learnable_textures as learnable_textures
 
 
+label_values = [0,255]
+texture_loss_weight = 20
+
+
 """
 TODO:
 
-gen_update
+gen_update?
 sample
-forward
+forward (done)
 dis_update
 
 eventually:
@@ -35,9 +41,9 @@ save,resume
 
 """
 
+def is_bad(x):
+    return (x.isnan() | x.isinf()).any()
 
-label_values = [0,255]
-texture_loss_weight = 20
 
 class MUNIT_Trainer(nn.Module):
     def __init__(self, hyperparameters):
@@ -50,7 +56,7 @@ class MUNIT_Trainer(nn.Module):
         ###########################
 
         #TODO: Connect the config to change the height, width, num_channels etc of the learnable textures
-        self.texture_pack = learnable_textures.LearnableTexturePackFourier(num_textures=len(label_values)) 
+        self.texture_pack = learnable_textures.LearnableTexturePackRaster(num_textures=len(label_values)) 
 
         a_num_channels = hyperparameters['input_dim_a']#+self.texture_pack.num_channels
         b_num_channels = hyperparameters['input_dim_b']
@@ -114,16 +120,22 @@ class MUNIT_Trainer(nn.Module):
                                                                                   label_values = label_values)
 
         texture_pack=self.texture_pack()
+        print("TEX PACK BAD:",is_bad(texture_pack))
+        # if is_bad(texture_pack):
+        #     from rp import pseudo_terminal
+        #     pseudo_terminal()
 
         scene_projections = projector.project_textures(scene_uvs, scene_labels, texture_pack)
 
         # x_a = x_a * 2 - 1 #Convert from 0,1 range to -1,1 range
         # x_a = torch.stack((x_a,scene_projections), dim=1) #Add projected textures
 
+        print("MILK BAD BEFORE:",is_bad(x_a))
         x_a = scene_projections #Let's try to minimize effort right now...let's just use 3 channels for visualization etc... TODO make all 6:
+        print("MILK BAD AFTER:",is_bad(x_a))
             # that involves creating more visualizations for all 6 channels and textures
 
-        return scene_uvs, scene_labels, scene_projections
+        return x_a, scene_uvs, scene_labels
 
 
     def recon_criterion(self, input, target):
@@ -134,6 +146,8 @@ class MUNIT_Trainer(nn.Module):
         self.eval()
         #s_a = Variable(self.s_a)
         # s_b = Variable(self.s_b)
+
+        x_a, _, _ = self.project_texture_pack(x_a)
 
         c_a = self.gen_a.encode(x_a)
         c_b = self.gen_b.encode(x_b)
@@ -155,10 +169,10 @@ class MUNIT_Trainer(nn.Module):
         ###########################
 
         #Because precise=True, x_a should be in the range (0,1) and x_b should be in the range (-1,1) because precise=False for that domain (see utils.py)
-
-        scene_uvs, scene_labels, scene_projections = self.project_texture_pack(x_a)
-        x_a = scene_projections
-
+        
+        print("BAD BEFORE PROJECT:",is_bad(x_a))
+        x_a, scene_uvs, scene_labels = self.project_texture_pack(x_a)
+        print("BAD AFTER PROJECT:",is_bad(x_a))
 
         self.tex_opt.zero_grad()
 
@@ -174,6 +188,7 @@ class MUNIT_Trainer(nn.Module):
         # encode
         c_a = self.gen_a.encode(x_a)
         c_b = self.gen_b.encode(x_b)
+        icecream.ic(is_bad(x_a),is_bad(x_b),is_bad(c_a),is_bad(c_b))
         # c_b, s_b_prime = self.gen_b.encode(x_b)
 
         # Half the time, use a real style instead of a randomly drawn one:
@@ -181,8 +196,14 @@ class MUNIT_Trainer(nn.Module):
         #     s_b = s_b_prime.detach()
         # decode (cross domain)
         x_ba = self.gen_a.decode(c_b)
+
+        icecream.ic(is_bad(c_b))
+        icecream.ic(is_bad(c_a))
+
         x_ab = self.gen_b.decode(c_a)
         # x_ab = self.gen_b.decode(c_a, s_b)
+        icecream.ic(is_bad(x_ab))
+
 
         # decode (within domain)
         x_a_recon = self.gen_a.decode(c_a)
@@ -225,6 +246,12 @@ class MUNIT_Trainer(nn.Module):
         #View Consistency Loss
         loss_view_consistency = self.view_consistency_loss(x_ab, scene_uvs, scene_labels)
 
+        if is_bad(loss_view_consistency):
+            rp.fansi_print("WALLOP",'blue','bold')
+
+        icecream.ic(is_bad(x_ab),is_bad(loss_view_consistency),is_bad(scene_uvs),is_bad(scene_labels),scene_uvs.min(),scene_uvs.max())
+
+            
         if (loss_view_consistency.isnan() | loss_view_consistency.isinf()).any(): print("view consistency has nan or inf")
 
         # loss_view_consistency=0 #TODO: Uncommenting this line causes the PREVIOUS line to trigger (the nan warning). This must be mutating loss_view_consistency somehow....how???
@@ -242,10 +269,17 @@ class MUNIT_Trainer(nn.Module):
                          hyperparameters['ms_ssim_b_w'  ] * loss_msssim_ba        + \
                          texture_loss_weight              * loss_view_consistency
                          # hyperparameters['recon_s_w'    ] * loss_gen_recon_s_b    + \
+        if is_bad(loss_gen_total):
+            rp.fansi_print("whaaaaa?",'blue','bold')
+        else:
+            rp.fansi_print('whaaammm','red','bold')
         loss_gen_total.backward()
 
+
+        print("BEFORE TEX BAD:",is_bad(self.texture_pack()))
         self.tex_opt.step()
         self.gen_opt.step()
+        print("AFTER TEX BAD:",is_bad(self.texture_pack()))
 
 
         #Unimportant code:
@@ -261,6 +295,8 @@ class MUNIT_Trainer(nn.Module):
         self.loss_msssim_ab        = loss_msssim_ab       .item()
         self.loss_msssim_ba        = loss_msssim_ba       .item()
         self.loss_gen_total = loss_gen_total.item()
+
+        print("---------------------------------END ITER----------------------------------------")
 
 
     def sample(self, x_a, x_b):
