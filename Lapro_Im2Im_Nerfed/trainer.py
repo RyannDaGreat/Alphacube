@@ -13,7 +13,6 @@ from torch.autograd import Variable
 import os
 import torch
 import random
-import torchvision
 import torch.nn as nn
 
 import upper.source.projector          as projector
@@ -21,6 +20,20 @@ import upper.source.unprojector        as unprojector
 import upper.source.scene_reader       as scene_reader
 import upper.source.view_consistency   as view_consistency
 import upper.source.learnable_textures as learnable_textures
+
+
+"""
+TODO:
+
+gen_update
+sample
+forward
+dis_update
+
+eventually:
+save,resume
+
+"""
 
 
 label_values = [0,255]
@@ -96,6 +109,23 @@ class MUNIT_Trainer(nn.Module):
         self.label_criterion = nn.CrossEntropyLoss()
 
 
+    def project_texture_pack(self, x_a):
+        scene_uvs, scene_labels = scene_reader.extract_scene_uvs_and_scene_labels(scene_images = x_a         ,
+                                                                                  label_values = label_values)
+
+        texture_pack=self.texture_pack()
+
+        scene_projections = projector.project_textures(scene_uvs, scene_labels, texture_pack)
+
+        # x_a = x_a * 2 - 1 #Convert from 0,1 range to -1,1 range
+        # x_a = torch.stack((x_a,scene_projections), dim=1) #Add projected textures
+
+        x_a = scene_projections #Let's try to minimize effort right now...let's just use 3 channels for visualization etc... TODO make all 6:
+            # that involves creating more visualizations for all 6 channels and textures
+
+        return scene_uvs, scene_labels, scene_projections
+
+
     def recon_criterion(self, input, target):
         return torch.mean(torch.abs(input - target))
 
@@ -126,18 +156,9 @@ class MUNIT_Trainer(nn.Module):
 
         #Because precise=True, x_a should be in the range (0,1) and x_b should be in the range (-1,1) because precise=False for that domain (see utils.py)
 
-        scene_uvs, scene_labels = scene_reader.extract_scene_uvs_and_scene_labels(scene_images = x_a         ,
-                                                                                  label_values = label_values)
+        scene_uvs, scene_labels, scene_projections = self.project_texture_pack(x_a)
+        x_a = scene_projections
 
-        texture_pack=self.texture_pack()
-
-        scene_projections = projector.project_textures(scene_uvs, scene_labels, texture_pack)
-
-        x_a = x_a * 2 - 1 #Convert from 0,1 range to -1,1 range
-        x_a = torch.stack((x_a,scene_projections), dim=1) #Add projected textures
-
-        x_a = scene_projections #Let's try to minimize effort right now...let's just use 3 channels for visualization etc... TODO make all 6:
-            # that involves creating more visualizations for all 6 channels and textures
 
         self.tex_opt.zero_grad()
 
