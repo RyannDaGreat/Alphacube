@@ -260,10 +260,10 @@ class LearnableTexturePack(nn.Module):
     
 class LearnableTexturePackRaster(LearnableTexturePack):
     def __init__(self,
-                 height      :int  ,
-                 width       :int  ,
-                 num_channels:int=3,
-                 num_textures:int=1):
+                 height      :int=256,
+                 width       :int=256,
+                 num_channels:int=  3,
+                 num_textures:int=  1):
         
         get_learnable_image = lambda: LearnableImageRaster(height      ,
                                                            width       ,
