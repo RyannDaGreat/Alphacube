@@ -1,7 +1,7 @@
 import torch
 
 
-def condense_values(tensor,values):
+def condense_values(tensor, values):
     #Mutates the given tensor and returns it
     #   - tensor: can be either torch.Tensor or np.ndarray
     #   - values: should be a list of int
@@ -43,7 +43,7 @@ def condense_values(tensor,values):
     return tensor
 
 
-def extract_scene_uvs_and_scene_labels(scene_images:torch.Tensor, label_values:list):
+def extract_scene_uvs_and_scene_labels(scene_images: torch.Tensor, label_values: list):
     #Takes an image obtained from an .exr file (with R,G,B) and return two torch tensors
     #It assumes all values are between [0,1] and that B encodes the label value while 
     #R,G represent the U,V values respectively
