@@ -22,22 +22,22 @@ import upper.source.view_consistency   as view_consistency
 import upper.source.learnable_textures as learnable_textures
 
 
+label_values = [0,255]
+texture_loss_weight = 20
+
+
 """
 TODO:
 
-gen_update
-sample
-forward
-dis_update
+gen_update ✔
+sample     ✔
+forward    ✔
+dis_update ✔
 
 eventually:
 save,resume
 
 """
-
-
-label_values = [0,255]
-texture_loss_weight = 20
 
 class MUNIT_Trainer(nn.Module):
     def __init__(self, hyperparameters):
@@ -123,7 +123,7 @@ class MUNIT_Trainer(nn.Module):
         x_a = scene_projections #Let's try to minimize effort right now...let's just use 3 channels for visualization etc... TODO make all 6:
             # that involves creating more visualizations for all 6 channels and textures
 
-        return scene_uvs, scene_labels, scene_projections
+        return x_a, scene_uvs, scene_labels
 
 
     def recon_criterion(self, input, target):
@@ -131,6 +131,8 @@ class MUNIT_Trainer(nn.Module):
 
 
     def forward(self, x_a, x_b):
+        x_a, _, _ = self.project_texture_pack(x_a)
+
         self.eval()
         #s_a = Variable(self.s_a)
         # s_b = Variable(self.s_b)
@@ -156,9 +158,7 @@ class MUNIT_Trainer(nn.Module):
 
         #Because precise=True, x_a should be in the range (0,1) and x_b should be in the range (-1,1) because precise=False for that domain (see utils.py)
 
-        scene_uvs, scene_labels, scene_projections = self.project_texture_pack(x_a)
-        x_a = scene_projections
-
+        x_a, scene_uvs, scene_labels = self.project_texture_pack(x_a)
 
         self.tex_opt.zero_grad()
 
@@ -227,8 +227,6 @@ class MUNIT_Trainer(nn.Module):
 
         if (loss_view_consistency.isnan() | loss_view_consistency.isinf()).any(): print("view consistency has nan or inf")
 
-        # loss_view_consistency=0 #TODO: Uncommenting this line causes the PREVIOUS line to trigger (the nan warning). This must be mutating loss_view_consistency somehow....how???
-        
         #Total loss
         loss_gen_total = hyperparameters['gan_w'        ] * loss_gen_adv_a        + \
                          hyperparameters['gan_w'        ] * loss_gen_adv_b        + \
@@ -264,6 +262,8 @@ class MUNIT_Trainer(nn.Module):
 
 
     def sample(self, x_a, x_b):
+
+        x_a, _, _ = self.project_texture_pack(x_a)
 
         self.eval()
         # s_b = self.s_b
@@ -325,6 +325,9 @@ class MUNIT_Trainer(nn.Module):
 
 
     def dis_update(self, x_a, x_b, hyperparameters):
+
+        x_a, _, _ = self.project_texture_pack(x_a)
+
         self.dis_opt.zero_grad()
         #s_a = Variable(torch.randn(x_a.size(0), self.style_dim, 1, 1).cuda())
         # s_b = Variable(torch.randn(x_b.size(0), self.style_dim, 1, 1).cuda())
