@@ -36,9 +36,16 @@ def weighted_variance(images, weights):
     
     return numerator/denominator
 
+def normalize_colors(images):
+    #TODO: Test this function's correctness in a jupyter notebook demo
+    assert len(images.shape)==4, 'images should be BCHW'
+    brightness = ((images**2).sum(1,keepdims=True))**.5
+    images = images/brightness
+    return images
 
 class ViewConsistencyLoss(nn.Module):
     def __init__(self, recovery_width:int=256, recovery_height:int=256, version='std'):
+        #TODO: add color normalization option
         
         #Usually recovery_width==recovery_height. There's not really a good reason not to make it square
         
