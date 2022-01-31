@@ -2,6 +2,7 @@ import torch.nn as nn
 import torch
 from .unprojector import unproject_translations_individually
 
+epsilon = 1e-2
 
 def weighted_mean(images, weights):
     #Takes BCHW images and BHW weights and returns a pixel-wise CHW average
@@ -12,6 +13,7 @@ def weighted_mean(images, weights):
     denominator = weights.sum(dim=0)[None]            # 1HW tensor
     
     denominator[denominator==0] = 1 #Get rid of 0's in denominator
+    denominator = denominator + epsilon #The previous line should be enough...but it's not. Alone, puts NAN's in the gradient...technically we don't need the previous line anymore...
     # When a particular pixel has 0 weight in any image, the output pixel is black
     
     return numerator/denominator
@@ -29,7 +31,8 @@ def weighted_variance(images, weights):
     numerator   = (squared_diff*weights[:,None]).sum(dim=0) # CHW tensor
     denominator = weights.sum(dim=0)[None]                  # 1HW tensor
     
-    denominator[denominator==0] = 1 #Get rid of 0's in denominator
+    denominator[denominator==0] = 1 #Get rid of 0's in denominator.
+    denominator = denominator + epsilon #The previous line should be enough...but it's not. Alone, it puts NAN's in the gradient...technically we don't need the previous line anymore...
     
     return numerator/denominator
 
