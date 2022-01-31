@@ -3,17 +3,21 @@ Copyright (C) 2018 NVIDIA Corporation.  All rights reserved.
 Licensed under the CC BY-NC-SA 4.0 license (https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode).
 """
 from data             import ImageFolder
+from networks         import Vgg16
+from torch.autograd   import Variable
 from torch.optim      import lr_scheduler
 from torch.utils.data import DataLoader
+from torchvision      import transforms
 
-import os
 import math
-import time
-import yaml
-import torch
 import numpy as np
+import os
+import time
+import torch
+import torch.nn as nn
 import torch.nn.init as init
 import torchvision.utils as vutils
+import yaml
 
 # SUMMARY:
 # get_all_data_loaders      : primary data loader interface (load trainA, testA, trainB, testB)
@@ -45,17 +49,6 @@ def get_all_data_loaders(conf):
     height      = conf['crop_image_height']
     width       = conf['crop_image_width']
 
-    def get_loader(augmentation, folder_name, train, precise):
-
-        input_folder = os.path.join(conf["data_root"], folder_name)
-
-        return get_data_loader_folder(input_folder               ,
-                                      batch_size                 ,
-                                      train                      ,
-                                      num_workers  = num_workers ,
-                                      augmentation = augmentation,
-                                      precise      = precise     )
-
     if 'data_root' in conf:
         aug = {}
         aug["new_size_min"] = conf["new_size_min_a"]
@@ -64,13 +57,13 @@ def get_all_data_loaders(conf):
         aug["circle_mask" ] = True
         aug["rotate"      ] = False
         aug["contrast"    ] = False
-        train_loader_a = get_loader(aug.copy(), 'train_fake', train=True , precise=True )
+        train_loader_a = get_data_loader_folder(os.path.join(conf['data_root'], 'train_fake'), batch_size, True , num_workers, augmentation=aug.copy(), precise = True )
         aug["circle_mask" ] = False
-        train_loader_b = get_loader(aug.copy(), 'test_fake' , train=False, precise=True )
+        test_loader_a  = get_data_loader_folder(os.path.join(conf['data_root'], 'test_fake' ), batch_size, False, num_workers, augmentation=aug.copy(), precise = True )
         aug["new_size_min"] = conf["new_size_min_b"]
         aug["new_size_max"] = conf["new_size_max_b"]
-        test_loader_a  = get_loader(aug.copy(), 'train_real', train=True , precise=False)
-        test_loader_b  = get_loader(aug.copy(), 'test_real' , train=False, precise=False)
+        train_loader_b = get_data_loader_folder(os.path.join(conf['data_root'], 'train_real'), batch_size, True , num_workers, augmentation=aug.copy(), precise = False)
+        test_loader_b  = get_data_loader_folder(os.path.join(conf['data_root'], 'test_real' ), batch_size, False, num_workers, augmentation=aug.copy(), precise = False)
 
         print("train_loader_a", len(train_loader_a))
         print("train_loader_b", len(train_loader_b))
@@ -81,6 +74,12 @@ def get_all_data_loaders(conf):
         raise IOError("Please provide a 'data_root' folder in the config file!")
 
     return train_loader_a, train_loader_b, test_loader_a, test_loader_b
+
+
+
+
+
+
 
 
 def get_data_loader_folder(input_folder,

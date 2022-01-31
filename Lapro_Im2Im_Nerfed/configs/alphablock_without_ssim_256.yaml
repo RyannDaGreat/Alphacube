@@ -4,22 +4,22 @@
 # logger options
 
 # ryan-specific optimization options TESTING BREAKYNESS
-max_iter: 30             # maximum number of training iterations
-batch_size: 3                 # batch size
-image_save_iter: 10        # How often do you want to save output images during training
-image_display_iter: 10       # How often do you want to display output images during training
-display_size: 16              # How many images do you want to display each time
-snapshot_save_iter: 5000     # How often do you want to save trained models log_iter: 10                   # How often do you want to log the training stats
-log_iter: 10
+max_iter: 30                # maximum number of training iterations
+batch_size: 3               # batch size
+image_save_iter: 10         # How often do you want to save output images during training
+image_display_iter: 10      # How often do you want to display output images during training
+display_size: 16            # How many images do you want to display each time
+snapshot_save_iter: 5000    # How often do you want to save trained models   
+log_iter: 10                # How often do you want to log the training stats
 
-# ryan-specific optimization options ACTUAL RUNS
+# # ryan-specific optimization options ACTUAL RUNS
+max_iter: 300000            # maximum number of training iterations
+batch_size: 3               # batch size
 image_save_iter: 500        # How often do you want to save output images during training
-image_display_iter: 2000       # How often do you want to display output images during training
-display_size: 16              # How many images do you want to display each time
-snapshot_save_iter: 5000     # How often do you want to save trained models log_iter: 10                   # How often do you want to log the training stats
-log_iter: 10
-max_iter: 300000             # maximum number of training iterations
-batch_size: 1                 # batch size
+image_display_iter: 2000    # How often do you want to display output images during training
+display_size: 16            # How many images do you want to display each time
+snapshot_save_iter: 5000    # How often do you want to save trained models
+log_iter: 10                # How often do you want to log the training stats
 
 # other optimization options
 weight_decay: 0.0001          # weight decay

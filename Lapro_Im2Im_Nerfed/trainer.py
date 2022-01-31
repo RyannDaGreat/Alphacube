@@ -117,11 +117,19 @@ class MUNIT_Trainer(nn.Module):
 
         scene_projections = projector.project_textures(scene_uvs, scene_labels, texture_pack)
 
+        #TOO MANY CHANNELS:
         # x_a = x_a * 2 - 1 #Convert from 0,1 range to -1,1 range
         # x_a = torch.stack((x_a,scene_projections), dim=1) #Add projected textures
+        # that involves creating more visualizations for all 6 channels and textures
 
-        x_a = scene_projections #Let's try to minimize effort right now...let's just use 3 channels for visualization etc... TODO make all 6:
-            # that involves creating more visualizations for all 6 channels and textures
+        #SIMPLE:
+        # x_a=x_a*2-1
+
+        #PURE LEARNED:
+        # x_a = scene_projections #Let's try to minimize effort right now...let's just use 3 channels for visualization etc... TODO make all 6:
+
+        #COMPROMISE:
+        x_a[:,:2] = scene_projections[:,:2] #A compromise...I'll force the third channel (blue) to be preserved and the first two channels (R,G) are learnable. I'll add more channels later...but right now I don't have the visualizers for this.
 
         return x_a, scene_uvs, scene_labels
 
@@ -224,8 +232,9 @@ class MUNIT_Trainer(nn.Module):
         
         #View Consistency Loss
         loss_view_consistency = self.view_consistency_loss(x_ab, scene_uvs, scene_labels)
+        # loss_view_consistency = 0
 
-        if (loss_view_consistency.isnan() | loss_view_consistency.isinf()).any(): print("view consistency has nan or inf")
+        # if (loss_view_consistency.isnan() | loss_view_consistency.isinf()).any(): print("view consistency has nan or inf")
 
         #Total loss
         loss_gen_total = hyperparameters['gan_w'        ] * loss_gen_adv_a        + \
