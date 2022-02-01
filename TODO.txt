@@ -1,3 +1,17 @@
+TODO:
+    The original code for lapro (in the archived things above this dir) is better.
+    The Nerfed one, in particular, achieves *much* cleaner, smoother results than this one when used in vanilla mode.
+    The view consistency loss helps bring it closer to that, but we really should merge the differences.
+    Do some tests: when exactly did it start to look worse? (i'm not sure. maybe it's the new way we load data? We should find out...
+        ...but unfortunately this takes time...looking at the pics can we predict whether it will be smooth or not from an early epoch?)
+
+TODO:
+    Create a python .rpy file to interface with the im2im: I want a simple input-output function that takes in the UVL maps (UV, Label) and outputs a translated image.
+    From this, we can create animations, and create our own sample images for further testing etc.
+    TODO:
+        We need to simulate the augmentation scaling etc that this algorithm uses somehow, in a nice deterministic way...however the test images are made we should imitate that
+        (if we want a smooth animation, the preprocessing has to be nonrandom)
+
 I made the renderer in the gen but NOT in anything else, such as the translations.py or the discriminator trainer!
 It HAS to be EVERYWHERE!
 TODO:
