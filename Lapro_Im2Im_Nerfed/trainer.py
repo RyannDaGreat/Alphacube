@@ -51,7 +51,7 @@ class MUNIT_Trainer(nn.Module):
         ###########################
 
         #TODO: Connect the config to change the height, width, num_channels etc of the learnable textures
-        self.texture_pack = learnable_textures.LearnableTexturePackRaster(num_textures=len(label_values)) 
+        self.texture_pack = learnable_textures.LearnableTexturePackFourier(num_textures=len(label_values)) 
 
         a_num_channels = hyperparameters['input_dim_a']#+self.texture_pack.num_channels
         b_num_channels = hyperparameters['input_dim_b']
@@ -133,7 +133,7 @@ class MUNIT_Trainer(nn.Module):
         # x_a[:,:2] = scene_projections[:,:2] #A compromise...I'll force the third channel (blue) to be preserved and the first two channels (R,G) are learnable. I'll add more channels later...but right now I don't have the visualizers for this.
 
         #RESIDUAL:
-        x_a = x_a + (scene_projections-1/2)*2*.1 #let's try to minimize effort right now...let's just use 3 channels for visualization etc... todo make all 6:
+        x_a = x_a + (scene_projections-1/2)*2*.5 #let's try to minimize effort right now...let's just use 3 channels for visualization etc... todo make all 6:
 
         return x_a, scene_uvs, scene_labels
 
