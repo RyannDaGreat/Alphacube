@@ -44,7 +44,7 @@ def normalize_colors(images):
     return images
 
 class ViewConsistencyLoss(nn.Module):
-    def __init__(self, recovery_width:int=256, recovery_height:int=256, version='std'):
+    def __init__(self, recovery_width:int=256, recovery_height:int=256, version='std', normalize_colors=True):
         #TODO: add color normalization option
         
         #Usually recovery_width==recovery_height. There's not really a good reason not to make it square
@@ -53,9 +53,10 @@ class ViewConsistencyLoss(nn.Module):
         
         assert version in ['std','var']
         
-        self.version        =version
-        self.recovery_width =recovery_width 
-        self.recovery_height=recovery_height
+        self.version         =version
+        self.recovery_width  =recovery_width 
+        self.recovery_height =recovery_height
+        self.normalize_colors=normalize_colors
         
     def forward(self, scene_translations, scene_uvs, scene_labels):
         

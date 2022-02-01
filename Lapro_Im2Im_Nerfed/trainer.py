@@ -24,6 +24,7 @@ import upper.source.learnable_textures as learnable_textures
 
 label_values = [0,255]
 texture_loss_weight = 20
+view_consistency_version = 'std'
 
 
 """
@@ -50,11 +51,11 @@ class MUNIT_Trainer(nn.Module):
         ###########################
 
         #TODO: Connect the config to change the height, width, num_channels etc of the learnable textures
-        self.texture_pack = learnable_textures.LearnableTexturePackFourier(num_textures=len(label_values)) 
+        self.texture_pack = learnable_textures.LearnableTexturePackRaster(num_textures=len(label_values)) 
 
         a_num_channels = hyperparameters['input_dim_a']#+self.texture_pack.num_channels
         b_num_channels = hyperparameters['input_dim_b']
-        self.view_consistency_loss = view_consistency.ViewConsistencyLoss(recovery_width = 128, recovery_height = 128)
+        self.view_consistency_loss = view_consistency.ViewConsistencyLoss(recovery_width = 128, recovery_height = 128, version = view_consistency_version)
 
         print("BATCH SIZE",hyperparameters['batch_size'])
         if not hyperparameters['batch_size']>1:print( "batch_size must be MORE than 1, but its %i"%hyperparameters['batch_size'])
@@ -123,13 +124,16 @@ class MUNIT_Trainer(nn.Module):
         # that involves creating more visualizations for all 6 channels and textures
 
         #SIMPLE:
-        # x_a=x_a*2-1
+        x_a=x_a*2-1
 
         #PURE LEARNED:
-        # x_a = scene_projections #Let's try to minimize effort right now...let's just use 3 channels for visualization etc... TODO make all 6:
+        # x_a = scene_projections #let's try to minimize effort right now...let's just use 3 channels for visualization etc... todo make all 6:
 
         #COMPROMISE:
-        x_a[:,:2] = scene_projections[:,:2] #A compromise...I'll force the third channel (blue) to be preserved and the first two channels (R,G) are learnable. I'll add more channels later...but right now I don't have the visualizers for this.
+        # x_a[:,:2] = scene_projections[:,:2] #A compromise...I'll force the third channel (blue) to be preserved and the first two channels (R,G) are learnable. I'll add more channels later...but right now I don't have the visualizers for this.
+
+        #RESIDUAL:
+        x_a = x_a + (scene_projections-1/2)*2*.1 #let's try to minimize effort right now...let's just use 3 channels for visualization etc... todo make all 6:
 
         return x_a, scene_uvs, scene_labels
 
@@ -233,6 +237,7 @@ class MUNIT_Trainer(nn.Module):
         #View Consistency Loss
         loss_view_consistency = self.view_consistency_loss(x_ab, scene_uvs, scene_labels)
         # loss_view_consistency = 0
+        print(float(loss_view_consistency))
 
         # if (loss_view_consistency.isnan() | loss_view_consistency.isinf()).any(): print("view consistency has nan or inf")
 
