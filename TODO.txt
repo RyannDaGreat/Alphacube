@@ -1,3 +1,7 @@
+NOTES:
+  As we see in version 0.0.3, a large batch size is very slow...but it helps. It makes it much better. (Note large = 5, as opposed to 2. 1 is useless: there is no view consistency loss with a batch size of 1)
+
+
 TODO:
     The original code for lapro (in the archived things above this dir) is better.
     The Nerfed one, in particular, achieves *much* cleaner, smoother results than this one when used in vanilla mode.
