@@ -112,7 +112,11 @@ try:
             iterations += 1
             if iterations >= max_iter:
                 sys.exit('Finish training')
-except:
+except BaseException as exception:
+    from rp import print_verbose_stack_trace
+    print_verbose_stack_trace(exception)
+
+for _ in range(5):
     from rp import pseudo_terminal
-    print("TRAINING ENDED! RUNNING PSEUDO TERMINAL")
+    print("TRAINING ENDED! RUNNING PSEUDO TERMINAL! (Running %i of 5 times to make sure you don't quit by accident...)"%(_+1))
     pseudo_terminal()
