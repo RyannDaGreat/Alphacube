@@ -37,7 +37,7 @@ forward    ✔
 dis_update ✔
 
 eventually:
-save,resume
+save,resume ✔
 
 """
 
@@ -46,6 +46,8 @@ class MUNIT_Trainer(nn.Module):
 
         super().__init__()
 
+
+        self.hyperparameters=hyperparameters
 
         ###########################
         ####### RYAN'S CODE #######
@@ -238,7 +240,7 @@ class MUNIT_Trainer(nn.Module):
         #View Consistency Loss
         loss_view_consistency = self.view_consistency_loss(x_ab, scene_uvs, scene_labels)
         # loss_view_consistency = 0
-        print(float(loss_view_consistency))
+        # print(float(loss_view_consistency))
 
         # if (loss_view_consistency.isnan() | loss_view_consistency.isinf()).any(): print("view consistency has nan or inf")
 
@@ -373,8 +375,6 @@ class MUNIT_Trainer(nn.Module):
 
 
     def resume(self, checkpoint_dir, hyperparameters):
-        #TODO: Integreate this with textures...or better yet, simply make it save the weights of self...
-
         # Load generators
         last_model_name = get_model_list(checkpoint_dir, "gen")
         state_dict = torch.load(last_model_name)
@@ -388,10 +388,16 @@ class MUNIT_Trainer(nn.Module):
         self.dis_a.load_state_dict(state_dict['a'])
         self.dis_b.load_state_dict(state_dict['b'])
 
+        # Load textures
+        last_model_name = get_model_list(checkpoint_dir, "tex")
+        state_dict = torch.load(last_model_name)
+        self.texture_pack.load_state_dict(state_dict['tex'])
+
         # Load optimizers
         state_dict = torch.load(os.path.join(checkpoint_dir, 'optimizer.pt'))
         self.dis_opt.load_state_dict(state_dict['dis'])
         self.gen_opt.load_state_dict(state_dict['gen'])
+        self.tex_opt.load_state_dict(state_dict['tex'])
 
         # Reinitilize schedulers
         self.dis_scheduler = get_scheduler(self.dis_opt, hyperparameters, iterations)
@@ -404,7 +410,13 @@ class MUNIT_Trainer(nn.Module):
         # Save generators, discriminators, and optimizers
         gen_name = os.path.join(snapshot_dir, 'gen_%08d.pt' % (iterations + 1))
         dis_name = os.path.join(snapshot_dir, 'dis_%08d.pt' % (iterations + 1))
+        tex_name = os.path.join(snapshot_dir, 'tex_%08d.pt' % (iterations + 1))
         opt_name = os.path.join(snapshot_dir, 'optimizer.pt'                  )
-        torch.save({'a'  : self.gen_a  .state_dict(), 'b'  : self.gen_b  .state_dict()}, gen_name)
-        torch.save({'a'  : self.dis_a  .state_dict(), 'b'  : self.dis_b  .state_dict()}, dis_name)
-        torch.save({'gen': self.gen_opt.state_dict(), 'dis': self.dis_opt.state_dict()}, opt_name)
+
+        torch.save({'a'  : self.gen_a       .state_dict(), 'b'  : self.gen_b  .state_dict()                                  }, gen_name)
+        torch.save({'a'  : self.dis_a       .state_dict(), 'b'  : self.dis_b  .state_dict()                                  }, dis_name)
+        torch.save({'tex': self.texture_pack.state_dict()                                                                    }, tex_name)
+        torch.save({'gen': self.gen_opt     .state_dict(), 'dis': self.dis_opt.state_dict(), 'tex': self.tex_opt.state_dict()}, opt_name)
+
+
+
