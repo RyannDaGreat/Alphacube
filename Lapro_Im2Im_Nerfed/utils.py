@@ -122,8 +122,8 @@ def __write_images(image_outputs, display_image_num, file_name):
 
 def write_2images(image_outputs, display_image_num, image_directory, postfix):
     n = len(image_outputs)
-    __write_images(image_outputs[0:5], display_image_num, '%s/gen_a2b_%s.png' % (image_directory, postfix))
-    __write_images(image_outputs[5:n], display_image_num, '%s/gen_b2a_%s.png' % (image_directory, postfix))
+    __write_images(image_outputs[0:6], display_image_num, '%s/gen_a2b_%s.png' % (image_directory, postfix))
+    __write_images(image_outputs[6:n], display_image_num, '%s/gen_b2a_%s.png' % (image_directory, postfix))
 
 
 def prepare_sub_folder(output_directory):
