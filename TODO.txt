@@ -7,12 +7,16 @@ For presentation:
     Use git LFS to store the animation files and ipynb's containing said animations. Animations will be saved as a series of JPG's.
   Put the images in my downloads folder into th presentaiotn
 
+Debug what I did to make vim start up so slowly..........oooofffff.......set up a git repo for vimrc......
+
 Save textures as part of the training process...
 
 NOTES:
   As we see in version 0.0.3, a large batch size is very slow...but it helps. It makes it much better. (Note large = 5, as opposed to 2. 1 is useless: there is no view consistency loss with a batch size of 1)
   The texture multiplier has a big effect! (Though to be fair it's confounded with fourier). I'm not sure why it works exactly...but I think it's because of regularization? Anyway, when it's .1 I see small changes to the floor mainly...but when it's .5....I see the L shape on the cube!!!! It's super active!
   A big difference between mine and theirs: theirs takes 6 channels as an input...but mine only takes 3 xD I want to see if I can keep it that way...it would make it great for the simulators!!! (Residual textures FTW!)
+
+The gen_opt and dis_opt both have schedulers. Should the texture optimizer? Would that make it better?
 
 
 See if I can get away with smaller batch sizes? It might go from 6 hours to 3 hours....maybe....
