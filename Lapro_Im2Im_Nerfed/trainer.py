@@ -25,6 +25,7 @@ import upper.source.learnable_textures as learnable_textures
 label_values = [0,255]
 texture_loss_weight = 20
 view_consistency_version = 'std'
+texture_multiplier = .5
 
 
 """
@@ -51,7 +52,7 @@ class MUNIT_Trainer(nn.Module):
         ###########################
 
         #TODO: Connect the config to change the height, width, num_channels etc of the learnable textures
-        self.texture_pack = learnable_textures.LearnableTexturePackFourier(num_textures=len(label_values)) 
+        self.texture_pack = learnable_textures.LearnableTexturePackFourier(height=256,width=256,num_textures=len(label_values)) 
 
         a_num_channels = hyperparameters['input_dim_a']#+self.texture_pack.num_channels
         b_num_channels = hyperparameters['input_dim_b']
@@ -133,7 +134,7 @@ class MUNIT_Trainer(nn.Module):
         # x_a[:,:2] = scene_projections[:,:2] #A compromise...I'll force the third channel (blue) to be preserved and the first two channels (R,G) are learnable. I'll add more channels later...but right now I don't have the visualizers for this.
 
         #RESIDUAL:
-        x_a = x_a + (scene_projections-1/2)*2*.5 #let's try to minimize effort right now...let's just use 3 channels for visualization etc... todo make all 6:
+        x_a = x_a + (scene_projections-1/2)*2*texture_multiplier#let's try to minimize effort right now...let's just use 3 channels for visualization etc... todo make all 6:
 
         return x_a, scene_uvs, scene_labels
 
