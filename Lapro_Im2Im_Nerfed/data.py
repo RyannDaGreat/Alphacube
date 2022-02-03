@@ -9,7 +9,6 @@ import numpy as np
 import rp
 import torch
 import torch.utils.data as data
-import torchvision
 from PIL import Image, ImageDraw
 from torchvision import transforms
 from rp import (
@@ -103,8 +102,8 @@ class ImageFolder(data.Dataset):
         path = self.imgs[index]
         img = self.loader(path)
 
-        minOutputSize = min(self.output_size)
-        maxOutputSize = max(self.output_size)
+        # minOutputSize = min(self.output_size)
+        # maxOutputSize = max(self.output_size)
 
         randAng  = random.random()*20-10
         randSize = random.randint(self.new_size_min, self.new_size_max)
@@ -112,7 +111,7 @@ class ImageFolder(data.Dataset):
         if self.add_circle_mask:
             height, width = get_image_dimensions(img)
 
-            minSize = min((width, height))
+            # minSize = min((width, height))
             maxSize = max((width, height))
 
             maxRadius = int(math.sqrt((width/2)**2 + (height/2)**2))
