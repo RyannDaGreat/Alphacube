@@ -15,11 +15,15 @@ NOTES:
   As we see in version 0.0.3, a large batch size is very slow...but it helps. It makes it much better. (Note large = 5, as opposed to 2. 1 is useless: there is no view consistency loss with a batch size of 1)
   The texture multiplier has a big effect! (Though to be fair it's confounded with fourier). I'm not sure why it works exactly...but I think it's because of regularization? Anyway, when it's .1 I see small changes to the floor mainly...but when it's .5....I see the L shape on the cube!!!! It's super active!
   A big difference between mine and theirs: theirs takes 6 channels as an input...but mine only takes 3 xD I want to see if I can keep it that way...it would make it great for the simulators!!! (Residual textures FTW!)
+    If transformers can do residual stuff instead of concatenating because of frequency differences...why can't I? I have a theory on why that worked, as I told letitia (coffe bean channel), and I was right I think? In either case, it works! 
   A big difference between tex and no tex: the blurryness of the table. It doesn't shift!
     If we ever use mobile robots with multi rooms, many images will share 0 common UV's. In this case we have to choose the batch less randomly: choose images that overlap
+  Setting the texture multiplier from .1 to .5, then from .5 to 5 had a big impact on the evolution of the algo. .5 was better than .1 (it created an L shape and drew on the cube, unlike .1 which didn't draw on the cube). But 5, learned much faster that the top of the cube is red and white than .5 did (epoch 2000 vs 10000 or so lol)
 
 The gen_opt and dis_opt both have schedulers. Should the texture optimizer? Would that make it better?
 
+
+The table blur: Why horizontal? It comes from inconsistencies from the cropping process: the images are only shifted left and right because of the rescaling and the fact that the input images are rectantular. Once we were able to know where it was (because of the textures) that problem dissapeared! This also means the textures helped!!
 
 See if I can get away with smaller batch sizes? It might go from 6 hours to 3 hours....maybe....
 
