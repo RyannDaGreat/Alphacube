@@ -104,6 +104,7 @@ class MUNIT_Trainer(nn.Module):
 
         self.dis_scheduler = get_scheduler(self.dis_opt, hyperparameters)
         self.gen_scheduler = get_scheduler(self.gen_opt, hyperparameters)
+        self.tex_scheduler = get_scheduler(self.tex_opt, hyperparameters)
 
         # Network weight initialization
         self.apply(weights_init(hyperparameters['init']))
@@ -374,6 +375,8 @@ class MUNIT_Trainer(nn.Module):
             self.dis_scheduler.step()
         if self.gen_scheduler is not None:
             self.gen_scheduler.step()
+        if self.tex_scheduler is not None:
+            self.tex_scheduler.step()
 
 
     def resume(self, checkpoint_dir, hyperparameters):
@@ -404,6 +407,7 @@ class MUNIT_Trainer(nn.Module):
         # Reinitilize schedulers
         self.dis_scheduler = get_scheduler(self.dis_opt, hyperparameters, iterations)
         self.gen_scheduler = get_scheduler(self.gen_opt, hyperparameters, iterations)
+        self.tex_scheduler = get_scheduler(self.tex_opt, hyperparameters, iterations)
         print('Resume from iteration %d' % iterations)
         return iterations
 
