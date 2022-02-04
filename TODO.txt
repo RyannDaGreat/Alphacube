@@ -65,6 +65,9 @@ RYOO TODO:
     EXPERIMENTS:
         We can exclude the uarm form the view and just do a bunch of close-your-eyes then manipilate of scenes to see if this method outperformes the baseline
     Neural texture could be called latent texture (this would break convention though)
+
+TODO: Fibbing
+    Try "Fibbing" textures: using the translations, we take advantage of the fact that a single translation is less blurry than an average of them. Instead of averaging them all together, we choose a tranlsation with maximal texture coverage for a particular label. Then we choose another translation that agrees with it most (prefereably agrees vacuously; meaning it has no common texture areas). Fill that in. No averaging: just writing in pixels to the recovered texture. Keep choosing the texture that agrees most with the current recovered texture. There are many possible solutions, so its nose grows like pinnochio: it's fibbing!
     
     
 FURTHER EXPERIMENTS:
