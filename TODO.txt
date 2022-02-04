@@ -52,3 +52,19 @@ TODO:
     We need image outputs for 6 channels. Why don't we start here? Have 6-channel inputs. Also, render the textures. Try all of that.
     Then, solve the NAN problem. Why are there NAN's?
    
+TO PRESENT:
+    Why use fourier instead of pixels?
+        Fourier means that when we have gaps between the UV positions in our translated scene (like we often do; see the unprojections in the demo - there are holes everywhere) that the parts in between are also evolved. This means the UV maps being good also has a positive effect on the results; and that the textures we generate are technically resolution independent (which is pretty cool)
+        TLDR: it help it learn better from incomplete information
+
+TODO:
+    Come up with a strategy to choose batches that have common UV positions so we can train more efficiently. This will be super important later on when we have more complicated scenes; and ESCPECIALLY when we have mobile robotic scenes.
+
+RYOO TODO:
+    View consistency should be called texture consistncy
+    EXPERIMENTS:
+        We can exclude the uarm form the view and just do a bunch of close-your-eyes then manipilate of scenes to see if this method outperformes the baseline
+    Neural texture could be called latent texture (this would break convention though)
+    
+    
+    
