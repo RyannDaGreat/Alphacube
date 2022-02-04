@@ -341,7 +341,8 @@ class MUNIT_Trainer(nn.Module):
 
         self.train()
 
-        return x_a_original, x_a, x_a_recon, x_ab, x_ab_rand, x_aba, x_b, x_b_recon, x_ba, x_bab
+        return x_a_original, x_a, x_a_recon, x_ab,            x_aba, x_b, x_b_recon, x_ba, x_bab
+        # return x_a_original, x_a, x_a_recon, x_ab, x_ab_rand, x_aba, x_b, x_b_recon, x_ba, x_bab #We removed all randomness, so x_ab_rand==x_ab exactly (I tested it - it's true. They're identical and therefore redundant)
 
 
     def dis_update(self, x_a, x_b, hyperparameters):
