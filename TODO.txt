@@ -67,4 +67,5 @@ RYOO TODO:
     Neural texture could be called latent texture (this would break convention though)
     
     
-    
+FURTHER EXPERIMENTS:
+    I'm having difficulty increasing the resultion (becuase of vram limitations I had to crop the image etc). And I noticed that the texture doesnt always align with the translation's cube positions...what if we add another loss to make the translated texture similar to the translation, and apply it in both directions like QVAE?
