@@ -26,6 +26,7 @@ label_values = [0,255]
 texture_loss_weight = 20
 view_consistency_version = 'std'
 texture_multiplier = 5
+texture_reality_loss_weight = 3 #Gotta rename this; it controls how much the texture and translations have to match
 
 
 """
@@ -258,6 +259,12 @@ class MUNIT_Trainer(nn.Module):
                          hyperparameters['ms_ssim_b_w'  ] * loss_msssim_ba        + \
                          texture_loss_weight              * loss_view_consistency
                          # hyperparameters['recon_s_w'    ] * loss_gen_recon_s_b    + \
+
+        
+        texture_reality_loss=((x_ab-x_a)**2).mean()*texture_reality_loss_weight
+
+        loss_gen_total = loss_gen_total + texture_reality_loss
+
         loss_gen_total.backward()
 
         self.tex_opt.step()
