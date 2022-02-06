@@ -35,8 +35,8 @@ recon_s_w: 1                  # weight of style reconstruction loss
 recon_c_w: 1                  # weight of content reconstruction loss
 recon_x_cyc_w: 10             # weight of explicit style augmented cycle consistency loss
 label_w: 1                    # weight of label loss
-ms_ssim_a_w: 0                # weight of multi-scale structural similarity loss (a -> b)
-ms_ssim_b_w: 0                # weight of multi-scale structural similarity loss (b -> a)
+# ms_ssim_a_w: 0                # weight of multi-scale structural similarity loss (a -> b)
+# ms_ssim_b_w: 0                # weight of multi-scale structural similarity loss (b -> a)
 
 # model options
 gen:

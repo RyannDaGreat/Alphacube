@@ -207,13 +207,13 @@ class MUNIT_Trainer(nn.Module):
         # x_b_recon = self.gen_b.decode(c_b, s_b_prime)
 
         # Structural similarity:
-        x_a_brightness  = torch.mean(x_a , dim=1, keepdim=True)
-        x_b_brightness  = torch.mean(x_b , dim=1, keepdim=True)
-        x_ab_brightness = torch.mean(x_ab, dim=1, keepdim=True)
-        x_ba_brightness = torch.mean(x_ba, dim=1, keepdim=True)
+        # x_a_brightness  = torch.mean(x_a , dim=1, keepdim=True)
+        # x_b_brightness  = torch.mean(x_b , dim=1, keepdim=True)
+        # x_ab_brightness = torch.mean(x_ab, dim=1, keepdim=True)
+        # x_ba_brightness = torch.mean(x_ba, dim=1, keepdim=True)
 
-        loss_msssim_ab = -msssim(x_a_brightness, x_ab_brightness, normalize=True)
-        loss_msssim_ba = -msssim(x_b_brightness, x_ba_brightness, normalize=True)
+        # loss_msssim_ab = -msssim(x_a_brightness, x_ab_brightness, normalize=True)
+        # loss_msssim_ba = -msssim(x_b_brightness, x_ba_brightness, normalize=True)
 
         # encode again
         c_b_recon = self.gen_a.encode(x_ba)
@@ -247,18 +247,18 @@ class MUNIT_Trainer(nn.Module):
         # if (loss_view_consistency.isnan() | loss_view_consistency.isinf()).any(): print("view consistency has nan or inf")
 
         #Total loss
-        loss_gen_total = hyperparameters['gan_w'        ] * loss_gen_adv_a        + \
-                         hyperparameters['gan_w'        ] * loss_gen_adv_b        + \
-                         hyperparameters['recon_x_w'    ] * loss_gen_recon_x_a    + \
-                         hyperparameters['recon_c_w'    ] * loss_gen_recon_c_a    + \
-                         hyperparameters['recon_x_w'    ] * loss_gen_recon_x_b    + \
-                         hyperparameters['recon_c_w'    ] * loss_gen_recon_c_b    + \
-                         hyperparameters['recon_x_cyc_w'] * loss_gen_cycrecon_x_a + \
-                         hyperparameters['recon_x_cyc_w'] * loss_gen_cycrecon_x_b + \
-                         hyperparameters['ms_ssim_a_w'  ] * loss_msssim_ab        + \
-                         hyperparameters['ms_ssim_b_w'  ] * loss_msssim_ba        + \
-                         texture_loss_weight              * loss_view_consistency
-                         # hyperparameters['recon_s_w'    ] * loss_gen_recon_s_b    + \
+        loss_gen_total  = hyperparameters['gan_w'        ] * loss_gen_adv_a       
+        loss_gen_total += hyperparameters['gan_w'        ] * loss_gen_adv_b       
+        loss_gen_total += hyperparameters['recon_x_w'    ] * loss_gen_recon_x_a   
+        loss_gen_total += hyperparameters['recon_c_w'    ] * loss_gen_recon_c_a   
+        loss_gen_total += hyperparameters['recon_x_w'    ] * loss_gen_recon_x_b   
+        loss_gen_total += hyperparameters['recon_c_w'    ] * loss_gen_recon_c_b   
+        loss_gen_total += hyperparameters['recon_x_cyc_w'] * loss_gen_cycrecon_x_a
+        loss_gen_total += hyperparameters['recon_x_cyc_w'] * loss_gen_cycrecon_x_b
+        loss_gen_total += texture_loss_weight              * loss_view_consistency
+        # loss_gen_total += hyperparameters['ms_ssim_a_w'  ] * loss_msssim_ab
+        # loss_gen_total += hyperparameters['ms_ssim_b_w'  ] * loss_msssim_ba
+        # loss_gen_total += hyperparameters['recon_s_w'    ] * loss_gen_recon_s_b
 
         
         texture_reality_loss=((x_ab-x_a)**2).mean()*texture_reality_loss_weight
@@ -281,8 +281,8 @@ class MUNIT_Trainer(nn.Module):
         self.loss_gen_recon_c_b    = loss_gen_recon_c_b   .item()
         self.loss_gen_cycrecon_x_a = loss_gen_cycrecon_x_a.item()
         self.loss_gen_cycrecon_x_b = loss_gen_cycrecon_x_b.item()
-        self.loss_msssim_ab        = loss_msssim_ab       .item()
-        self.loss_msssim_ba        = loss_msssim_ba       .item()
+        # self.loss_msssim_ab        = loss_msssim_ab       .item()
+        # self.loss_msssim_ba        = loss_msssim_ba       .item()
         self.loss_gen_total = loss_gen_total.item()
 
 
