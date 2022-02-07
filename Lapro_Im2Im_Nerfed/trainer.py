@@ -26,7 +26,7 @@ label_values = [0,255]
 texture_loss_weight = 20
 view_consistency_version = 'std'
 texture_multiplier = 5
-texture_reality_loss_weight = 3 #Gotta rename this; it controls how much the texture and translations have to match
+texture_reality_loss_weight = 2 #Gotta rename this; it controls how much the texture and translations have to match
 
 
 """
@@ -144,6 +144,7 @@ class MUNIT_Trainer(nn.Module):
 
 
     def recon_criterion(self, input, target):
+        # return -msssim(input,target,normalize=True)
         return torch.mean(torch.abs(input - target))
 
 
@@ -261,7 +262,9 @@ class MUNIT_Trainer(nn.Module):
         # loss_gen_total += hyperparameters['recon_s_w'    ] * loss_gen_recon_s_b
 
         
-        texture_reality_loss=((x_ab-x_a)**2).mean()*texture_reality_loss_weight
+        texture_reality_loss =((x_ab-x_a)**2).mean()*texture_reality_loss_weight
+        texture_reality_loss+=-msssim(x_ab,x_a,normalize=True)*texture_reality_loss_weight #normalize=True because without it we get tons of NaN's
+        # texture_reality_loss=-msssim(x_ab.mean(dim=1,keepdim=True),x_a.mean(dim=1,keepdim=True))*texture_reality_loss_weight
 
         loss_gen_total = loss_gen_total + texture_reality_loss
 
