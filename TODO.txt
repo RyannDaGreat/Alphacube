@@ -69,8 +69,21 @@ RYOO TODO:
 TODO: Fibbing
     Try "Fibbing" textures: using the translations, we take advantage of the fact that a single translation is less blurry than an average of them. Instead of averaging them all together, we choose a tranlsation with maximal texture coverage for a particular label. Then we choose another translation that agrees with it most (prefereably agrees vacuously; meaning it has no common texture areas). Fill that in. No averaging: just writing in pixels to the recovered texture. Keep choosing the texture that agrees most with the current recovered texture. There are many possible solutions, so its nose grows like pinnochio: it's fibbing!
     
+OBSERVATIONS:
+    - v0.0.8: High resolution works wonders! I had to crop it all to make it work though. This presented new problems though before v0.0.8 was reached (between 0.0.7 and 0.0.8 was the bad high res test. see the saved images). The trick to getting this to work? Make the neural texture look like the translated output.
+        - To do this: I only tried this with both MSSSIM and MSE at the same time.
+        - Why? Why not just MSE or just MSSSIM?
+        - MSE was the first thing I tried. But the neural texture looks better when I combine it with MSSSIM. MSSSIM alone doesn't correct the colors enough to my liking though (MSE makes the colors better). MSSSIM and MSE together look good though.
+        - Why does this work better? Idk. But I have my hunches: I forced it so that if you blend the neural texture of the cube into the background, then that means the actual cubes have to dissapear too! This is like the view consistency loss in a way...but that alone seemed too weak to stop it from making phantom cubes on the floor (though to be fair, I never have let it run for a long time with a higher view consistency loss weight). Also intuitively, it just makes sense to have the neural texture look like the translation. It makes the neural texture more interperatable.
+    - A side note that could become a paper in of itself: MSSSIM is MUCH MUCH faster at learning neural fourier images. Maybe this could improve NERF? See the demo!!!
+    - Adding a learning rate schedule to the neural texture seeeeemmmmmssss to have made it more stable....I'm not seeing NaN's anymore mid-training (yet...). 
+    - Interestingly, the orange side of the alphacube texture always appears in the same place
+        - Even more interestingly...this seems to have completely flipped mid-training in the high res version v0.0.8
+    - The butterfly took the longest to train
+    
     
 FURTHER EXPERIMENTS:
     I'm having difficulty increasing the resultion (becuase of vram limitations I had to crop the image etc). And I noticed that the texture doesnt always align with the translation's cube positions...what if we add another loss to make the translated texture similar to the translation, and apply it in both directions like QVAE?
     Use MSSIM in basic ipynb
     Use MSSIM here too
+
