@@ -91,6 +91,8 @@ class ImageFolder(data.Dataset):
         self.rotate          = "rotate"      in augmentation and augmentation["rotate"     ] == True
         self.contrast        = "contrast"    in augmentation and augmentation["contrast"   ] == True
 
+        self.skip_crop = False #When evaluating, we might set this to True...
+
         if "new_size_min" in augmentation and "new_size_max" in augmentation:
             self.new_size_min = augmentation["new_size_min"]
             self.new_size_max = augmentation["new_size_max"]
@@ -100,6 +102,9 @@ class ImageFolder(data.Dataset):
 
     def __getitem__(self, index):
         path = self.imgs[index]
+        return self.process_image_path(path)
+
+    def process_image_path(self, path):
         img = self.loader(path)
 
         # minOutputSize = min(self.output_size)
@@ -148,7 +153,8 @@ class ImageFolder(data.Dataset):
         ry = random.randint(0, max(H - self.output_size[1], 0))
         rx = random.randint(0, max(W - self.output_size[0], 0))
 
-        img = transforms.functional.crop(img, ry, rx, self.output_size[1], self.output_size[0])
+        if not self.skip_crop:
+            img = transforms.functional.crop(img, ry, rx, self.output_size[1], self.output_size[0])
 
         if not self.precise:
             #We don't want to make UV maps brighter or dimmer, as this could cause arbitrary shifts in textures

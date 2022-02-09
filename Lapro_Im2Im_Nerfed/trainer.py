@@ -28,15 +28,18 @@ view_consistency_version = 'std'
 texture_multiplier = 5
 texture_reality_loss_weight = 2 #Gotta rename this; it controls how much the texture and translations have to match
 
-
 class MUNIT_Trainer(nn.Module):
-    def __init__(self, hyperparameters):
+    def __init__(self, hyperparameters, trainable=True):
 
         super().__init__()
 
+        if trainable:
+            #If self.trainable is True, we also allocate discriminators and optimizers etc to vram
+            self.trainable=True
+        else:
+            self.trainable=False
 
         self.hyperparameters=hyperparameters
-
 
         #TODO: Connect the config to change the height, width, num_channels etc of the learnable textures
         self.texture_pack = learnable_textures.LearnableTexturePackFourier(height=256,width=256,num_textures=len(label_values)) 
@@ -48,16 +51,17 @@ class MUNIT_Trainer(nn.Module):
         print("BATCH SIZE",hyperparameters['batch_size'])
         if not hyperparameters['batch_size']>1:print( "batch_size must be MORE than 1, but its %i"%hyperparameters['batch_size'])
 
-
-        lr = hyperparameters['lr']
+        if self.trainable:
+            lr = hyperparameters['lr']
 
         # Initiate the networks
         self.gen_a = StylelessGen(a_num_channels, hyperparameters['gen'])  # auto-encoder for domain a
         self.gen_b = StylelessGen(b_num_channels, hyperparameters['gen'])  # auto-encoder for domain b
         # self.gen_b = AdaINGen  (hyperparameters['input_dim_b'], hyperparameters['gen'])  # auto-encoder for domain b
 
-        self.dis_a = MsImageDis(a_num_channels, hyperparameters['dis']) # discriminator for domain a
-        self.dis_b = MsImageDis(b_num_channels, hyperparameters['dis']) # discriminator for domain b
+        if self.trainable:
+            self.dis_a = MsImageDis(a_num_channels, hyperparameters['dis']) # discriminator for domain a
+            self.dis_b = MsImageDis(b_num_channels, hyperparameters['dis']) # discriminator for domain b
 
         # self.instancenorm = nn.InstanceNorm2d(512, affine=False)
 
@@ -69,30 +73,32 @@ class MUNIT_Trainer(nn.Module):
         # self.s_b = torch.randn(display_size, self.style_dim, 1, 1).cuda()
 
         # Setup the optimizers
-        beta1 = hyperparameters['beta1']
-        beta2 = hyperparameters['beta2']
+        if self.trainable:
+            beta1 = hyperparameters['beta1']
+            beta2 = hyperparameters['beta2']
 
-        dis_params = list(self.dis_a.parameters()) + list(self.dis_b.parameters())
-        gen_params = list(self.gen_a.parameters()) + list(self.gen_b.parameters())
+            dis_params = list(self.dis_a.parameters()) + list(self.dis_b.parameters())
+            gen_params = list(self.gen_a.parameters()) + list(self.gen_b.parameters())
 
-        dis_params = [p for p in dis_params if p.requires_grad]
-        gen_params = [p for p in gen_params if p.requires_grad]
-        tex_params = list(self.texture_pack.parameters())
+            dis_params = [p for p in dis_params if p.requires_grad]
+            gen_params = [p for p in gen_params if p.requires_grad]
+            tex_params = list(self.texture_pack.parameters())
 
-        self.dis_opt = torch.optim.Adam(dis_params, lr=lr   , betas=(beta1, beta2), weight_decay=hyperparameters['weight_decay'])
-        self.gen_opt = torch.optim.Adam(gen_params, lr=lr   , betas=(beta1, beta2), weight_decay=hyperparameters['weight_decay'])
-        self.tex_opt = torch.optim.Adam(tex_params, lr=lr*10, betas=(beta1, beta2), weight_decay=hyperparameters['weight_decay'])
+            self.dis_opt = torch.optim.Adam(dis_params, lr=lr   , betas=(beta1, beta2), weight_decay=hyperparameters['weight_decay'])
+            self.gen_opt = torch.optim.Adam(gen_params, lr=lr   , betas=(beta1, beta2), weight_decay=hyperparameters['weight_decay'])
+            self.tex_opt = torch.optim.Adam(tex_params, lr=lr*10, betas=(beta1, beta2), weight_decay=hyperparameters['weight_decay'])
 
-        self.dis_scheduler = get_scheduler(self.dis_opt, hyperparameters)
-        self.gen_scheduler = get_scheduler(self.gen_opt, hyperparameters)
-        self.tex_scheduler = get_scheduler(self.tex_opt, hyperparameters)
+            self.dis_scheduler = get_scheduler(self.dis_opt, hyperparameters)
+            self.gen_scheduler = get_scheduler(self.gen_opt, hyperparameters)
+            self.tex_scheduler = get_scheduler(self.tex_opt, hyperparameters)
 
         # Network weight initialization
-        self.apply(weights_init(hyperparameters['init']))
-        self.dis_a.apply(weights_init('gaussian'))
-        self.dis_b.apply(weights_init('gaussian'))
+        if self.trainable:
+            self.apply(weights_init(hyperparameters['init']))
+            self.dis_a.apply(weights_init('gaussian'))
+            self.dis_b.apply(weights_init('gaussian'))
 
-        self.label_criterion = nn.CrossEntropyLoss()
+            self.label_criterion = nn.CrossEntropyLoss()
 
 
     def project_texture_pack(self, x_a):
@@ -149,6 +155,7 @@ class MUNIT_Trainer(nn.Module):
 
     def gen_update(self, x_a, x_b, hyperparameters, useLabelLoss=False):
 
+        assert self.trainable, 'This MUNIT_Trainer is not trainable, and does not have optimizers or discriminators etc'
 
         ###########################
         ####### RYAN'S CODE #######
@@ -334,8 +341,35 @@ class MUNIT_Trainer(nn.Module):
         return x_a_original, x_a, x_a_recon, x_ab,            x_aba, x_b, x_b_recon, x_ba, x_bab
         # return x_a_original, x_a, x_a_recon, x_ab, x_ab_rand, x_aba, x_b, x_b_recon, x_ba, x_bab #We removed all randomness, so x_ab_rand==x_ab exactly (I tested it - it's true. They're identical and therefore redundant)
 
+    def sample_a2b(self, x_a):
+        #This code is very similar to self.sample(), except it has a few parts removed for the sake of efficiency.
+        #If you ever want to modify the functionality of this function, make sure you modify it in self.sample() too
+        #TODO: Remove this redundancy lol
+
+        x_a, _, _ = self.project_texture_pack(x_a)
+
+        self.eval()
+        x_ab = []
+
+        for i in range(x_a.size(0)):
+            # get individual images from list:
+            x_a_ = x_a[i].unsqueeze(0)
+
+            c_a   = self.gen_a.encode(x_a_)
+            x_ab_ = self.gen_b.decode(c_a )
+
+            x_ab.append(x_ab_)
+
+        x_ab=(torch.cat(x_ab)+1)/2
+
+        self.train()
+
+        return x_ab
+
 
     def dis_update(self, x_a, x_b, hyperparameters):
+
+        assert self.trainable, 'This MUNIT_Trainer is not trainable, and does not have optimizers or discriminators etc'
 
         x_a, _, _ = self.project_texture_pack(x_a)
 
@@ -378,32 +412,36 @@ class MUNIT_Trainer(nn.Module):
         self.gen_b.load_state_dict(state_dict['b'])
         iterations = int(last_model_name[-11:-3])
 
-        # Load discriminators
-        last_model_name = get_model_list(checkpoint_dir, "dis")
-        state_dict = torch.load(last_model_name)
-        self.dis_a.load_state_dict(state_dict['a'])
-        self.dis_b.load_state_dict(state_dict['b'])
-
         # Load textures
         last_model_name = get_model_list(checkpoint_dir, "tex")
         state_dict = torch.load(last_model_name)
         self.texture_pack.load_state_dict(state_dict['tex'])
 
-        # Load optimizers
-        state_dict = torch.load(os.path.join(checkpoint_dir, 'optimizer.pt'))
-        self.dis_opt.load_state_dict(state_dict['dis'])
-        self.gen_opt.load_state_dict(state_dict['gen'])
-        self.tex_opt.load_state_dict(state_dict['tex'])
+        if self.trainable:
+            # Load discriminators
+            last_model_name = get_model_list(checkpoint_dir, "dis")
+            state_dict = torch.load(last_model_name)
+            self.dis_a.load_state_dict(state_dict['a'])
+            self.dis_b.load_state_dict(state_dict['b'])
 
-        # Reinitilize schedulers
-        self.dis_scheduler = get_scheduler(self.dis_opt, hyperparameters, iterations)
-        self.gen_scheduler = get_scheduler(self.gen_opt, hyperparameters, iterations)
-        self.tex_scheduler = get_scheduler(self.tex_opt, hyperparameters, iterations)
-        print('Resume from iteration %d' % iterations)
-        return iterations
+            # Load optimizers
+            state_dict = torch.load(os.path.join(checkpoint_dir, 'optimizer.pt'))
+            self.dis_opt.load_state_dict(state_dict['dis'])
+            self.gen_opt.load_state_dict(state_dict['gen'])
+            self.tex_opt.load_state_dict(state_dict['tex'])
+
+            # Reinitilize schedulers
+            self.dis_scheduler = get_scheduler(self.dis_opt, hyperparameters, iterations)
+            self.gen_scheduler = get_scheduler(self.gen_opt, hyperparameters, iterations)
+            self.tex_scheduler = get_scheduler(self.tex_opt, hyperparameters, iterations)
+            print('Resume from iteration %d' % iterations)
+            return iterations
 
 
     def save(self, snapshot_dir, iterations):
+
+        assert self.trainable, 'This MUNIT_Trainer is not trainable, and does not have optimizers or discriminators etc'
+
         # Save generators, discriminators, and optimizers
         gen_name = os.path.join(snapshot_dir, 'gen_%08d.pt' % (iterations + 1))
         dis_name = os.path.join(snapshot_dir, 'dis_%08d.pt' % (iterations + 1))
