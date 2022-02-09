@@ -1,5 +1,5 @@
 #Ignore all model outputs (a bunch of images and big files)
-Lapro_Im2Im_Nerfed/trained_models/
+translator/trained_models/
 
 # Ignore all pycaches: https://stackoverflow.com/questions/56309100/how-to-ignore-the-same-name-directory-pycache-in-a-project
 **/__pycache__/
