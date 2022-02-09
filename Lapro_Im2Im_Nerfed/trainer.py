@@ -29,19 +29,6 @@ texture_multiplier = 5
 texture_reality_loss_weight = 2 #Gotta rename this; it controls how much the texture and translations have to match
 
 
-"""
-TODO:
-
-gen_update ✔
-sample     ✔
-forward    ✔
-dis_update ✔
-
-eventually:
-save,resume ✔
-
-"""
-
 class MUNIT_Trainer(nn.Module):
     def __init__(self, hyperparameters):
 
@@ -50,9 +37,6 @@ class MUNIT_Trainer(nn.Module):
 
         self.hyperparameters=hyperparameters
 
-        ###########################
-        ####### RYAN'S CODE #######
-        ###########################
 
         #TODO: Connect the config to change the height, width, num_channels etc of the learnable textures
         self.texture_pack = learnable_textures.LearnableTexturePackFourier(height=256,width=256,num_textures=len(label_values)) 
@@ -65,10 +49,6 @@ class MUNIT_Trainer(nn.Module):
         if not hyperparameters['batch_size']>1:print( "batch_size must be MORE than 1, but its %i"%hyperparameters['batch_size'])
 
 
-        #############################
-        ####### ORIGINAL CODE #######
-        #############################
-
         lr = hyperparameters['lr']
 
         # Initiate the networks
@@ -79,14 +59,14 @@ class MUNIT_Trainer(nn.Module):
         self.dis_a = MsImageDis(a_num_channels, hyperparameters['dis']) # discriminator for domain a
         self.dis_b = MsImageDis(b_num_channels, hyperparameters['dis']) # discriminator for domain b
 
-        self.instancenorm = nn.InstanceNorm2d(512, affine=False)
+        # self.instancenorm = nn.InstanceNorm2d(512, affine=False)
 
-        self.style_dim   = hyperparameters['gen']['style_dim'  ]
+        # self.style_dim   = hyperparameters['gen']['style_dim'  ]
         self.num_classes = hyperparameters['gen']['num_classes']
 
         # fix the noise used in sampling
-        display_size = int(hyperparameters['display_size'])
-        self.s_b = torch.randn(display_size, self.style_dim, 1, 1).cuda()
+        # display_size = int(hyperparameters['display_size'])
+        # self.s_b = torch.randn(display_size, self.style_dim, 1, 1).cuda()
 
         # Setup the optimizers
         beta1 = hyperparameters['beta1']
