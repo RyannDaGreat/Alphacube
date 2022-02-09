@@ -88,8 +88,8 @@ class ImageFolder(data.Dataset):
         self.loader          = loader
         self.output_size     = augmentation["output_size"]
         self.add_circle_mask = "circle_mask" in augmentation and augmentation["circle_mask"] == True
-        self.rotate          = "rotate"      in augmentation and augmentation["rotate"]      == True
-        self.contrast        = "contrast"    in augmentation and augmentation["contrast"]    == True
+        self.rotate          = "rotate"      in augmentation and augmentation["rotate"     ] == True
+        self.contrast        = "contrast"    in augmentation and augmentation["contrast"   ] == True
 
         if "new_size_min" in augmentation and "new_size_max" in augmentation:
             self.new_size_min = augmentation["new_size_min"]
@@ -155,7 +155,7 @@ class ImageFolder(data.Dataset):
             if self.contrast:
                 # this is disabled from get_all_data_loaders in utils.py
                 c = random.uniform( 0.75, 1.25)
-                b = random.uniform(-0.1,  0.1 )
+                b = random.uniform(-0.10, 0.10)
                 img = img * c + b
 
             

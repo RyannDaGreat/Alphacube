@@ -91,8 +91,8 @@ try:
                 with torch.no_grad():
                     test_image_outputs  = trainer.sample(test_display_images_a , test_display_images_b )
                     train_image_outputs = trainer.sample(train_display_images_a, train_display_images_b)
-                write_2images(test_image_outputs  , display_size , image_directory , 'test_%08d'  % (iterations + 1 ))
-                write_2images(train_image_outputs , display_size , image_directory , 'train_%08d' % (iterations + 1 ))
+                write_2images(test_image_outputs , display_size, image_directory, 'test_%08d'  % (iterations + 1 ))
+                write_2images(train_image_outputs, display_size, image_directory, 'train_%08d' % (iterations + 1 ))
                 # HTML
                 write_html(output_directory + "/index.html", iterations + 1, config['image_save_iter'], 'images')
                 del test_image_outputs, train_image_outputs
@@ -101,7 +101,7 @@ try:
                 with torch.no_grad():
                     test_image_outputs  = trainer.sample(test_display_images_a, test_display_images_b)
                     train_image_outputs = trainer.sample(train_display_images_a, train_display_images_b)
-                write_2images(test_image_outputs, display_size, image_directory, 'test_current')
+                write_2images(test_image_outputs , display_size, image_directory, 'test_current')
                 write_2images(train_image_outputs, display_size, image_directory, 'train_current')
                 del test_image_outputs, train_image_outputs
 
