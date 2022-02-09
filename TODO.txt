@@ -1,5 +1,12 @@
 Organize this TODO
 
+BIG QUESTION:
+    If we use 6 channels (one for originl UVL and the other the projected texture), can we avoid having to use the texture reality loss? 
+        * Are both together better than either one?
+    Can we do artistic style transfer? (make 3d scanned assets look like Arcane)? (HOW? We use 3 extra input channels, and still constrain only the last 3 to look like the translations)
+        * We might add another channel, a single channel from a pixel-wise MLP that takes normals and returns values for lighting...
+
+
 For presentation:
   Create animations of evolution over time. Note how the new one prefers circular rings at first, and the weird artifacts.
   Create animations of the cubes moving to SHOW temporal consistency. Chart their (recovered) textures throughout the animation as well.
