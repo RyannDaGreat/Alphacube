@@ -13,6 +13,10 @@ __pycache__/
 **/.ipynb_checkpoints/
 .ipynb_checkpoints/
 
+#Ignore all untracked/
+**/untracked/
+untracked/
+
 #Ignore all vim swp files. I'm going to keep .un files though
 **/*.swp
 *.swp
