@@ -6,6 +6,9 @@ BIG QUESTION:
     Can we do artistic style transfer? (make 3d scanned assets look like Arcane)? (HOW? We use 3 extra input channels, and still constrain only the last 3 to look like the translations)
         * We might add another channel, a single channel from a pixel-wise MLP that takes normals and returns values for lighting...
 
+TODO:
+    Keep track of losses so we can graph them. Maybe even use Wandb?
+
 
 For presentation:
   Create animations of evolution over time. Note how the new one prefers circular rings at first, and the weird artifacts.
