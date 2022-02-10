@@ -58,7 +58,7 @@ dis:
   pad_type: reflect           # padding type [zero/reflect]
 
 # data options
-input_dim_a: 3                    # number of image channels [1/3]
+input_dim_a: 6                    # number of image channels [1/3]
 input_dim_b: 3                    # number of image channels [1/3]
 num_workers: 8                    # number of data loading threads
 new_size_min_a: 320               # first (randomly) resize the shortest image side to this size

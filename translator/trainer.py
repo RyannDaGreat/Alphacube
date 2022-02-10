@@ -117,6 +117,8 @@ class MUNIT_Trainer(nn.Module):
         #SIMPLE:
         x_a=x_a*2-1
 
+        content = x_a+0 #Might replace with better content later
+
         #PURE LEARNED:
         # x_a = scene_projections #let's try to minimize effort right now...let's just use 3 channels for visualization etc... todo make all 6:
 
@@ -125,6 +127,8 @@ class MUNIT_Trainer(nn.Module):
 
         #RESIDUAL:
         x_a = x_a + (scene_projections-1/2)*2*texture_multiplier#let's try to minimize effort right now...let's just use 3 channels for visualization etc... todo make all 6:
+
+        x_a = torch.cat((x_a,content),dim=1)#BCHW
 
         return x_a, scene_uvs, scene_labels
 
@@ -249,9 +253,8 @@ class MUNIT_Trainer(nn.Module):
         # loss_gen_total += hyperparameters['recon_s_w'    ] * loss_gen_recon_s_b
 
         
-        texture_reality_loss =((x_ab-x_a)**2).mean()*texture_reality_loss_weight
-        texture_reality_loss+=-msssim(x_ab,x_a,normalize=True)*texture_reality_loss_weight #normalize=True because without it we get tons of NaN's
-        # texture_reality_loss=-msssim(x_ab.mean(dim=1,keepdim=True),x_a.mean(dim=1,keepdim=True))*texture_reality_loss_weight
+        texture_reality_loss =(      (x_ab-x_a[:,:3])**2).mean()    *texture_reality_loss_weight
+        texture_reality_loss+=-msssim(x_ab,x_a[:,:3],normalize=True)*texture_reality_loss_weight #normalize=True because without it we get tons of NaN's
 
         loss_gen_total = loss_gen_total + texture_reality_loss
 
@@ -338,7 +341,7 @@ class MUNIT_Trainer(nn.Module):
 
         self.train()
 
-        return x_a_original, x_a, x_a_recon, x_ab,            x_aba, x_b, x_b_recon, x_ba, x_bab
+        return x_a_original, x_a[:,:3], x_a_recon[:,:3], x_a_recon[:,3:], x_ab,            x_aba[:,:3], x_aba[:,3:], x_b, x_b_recon, x_ba[:,:3], x_ba[:,3:], x_bab
         # return x_a_original, x_a, x_a_recon, x_ab, x_ab_rand, x_aba, x_b, x_b_recon, x_ba, x_bab #We removed all randomness, so x_ab_rand==x_ab exactly (I tested it - it's true. They're identical and therefore redundant)
 
     def sample_a2b(self, x_a):
