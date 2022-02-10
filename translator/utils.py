@@ -44,10 +44,10 @@ def get_all_data_loaders(conf):
 
     #This needs to be modified by Ryan Burgert later on
 
-    batch_size  = conf['batch_size']
-    num_workers = conf['num_workers']
+    batch_size  = conf['batch_size'       ]
+    num_workers = conf['num_workers'      ]
     height      = conf['crop_image_height']
-    width       = conf['crop_image_width']
+    width       = conf['crop_image_width' ]
 
     if 'data_root' in conf:
         aug = {}
@@ -82,13 +82,13 @@ def get_all_data_loaders(conf):
 
 
 
-def get_data_loader_folder(input_folder,
-                           batch_size,
-                           train,
-                           num_workers=4,
-                           load_paths=False,
-                           augmentation={},
-                           precise=True):
+def get_data_loader_folder(input_folder        ,
+                           batch_size          ,
+                           train               ,
+                           num_workers  = 4    ,
+                           load_paths   = False,
+                           augmentation = {}   ,
+                           precise      = True ):
 
     dataset = ImageFolder(
         input_folder                ,
