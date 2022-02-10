@@ -14,7 +14,7 @@
 
 # # ryan-specific optimization options ACTUAL RUNS
 max_iter: 300000            # maximum number of training iterations
-batch_size: 5               # batch size
+batch_size: 7               # batch size
 image_save_iter: 250        # How often do you want to save output images during training
 image_display_iter: 2000    # How often do you want to display output images during training
 display_size: 16            # How many images do you want to display each time
