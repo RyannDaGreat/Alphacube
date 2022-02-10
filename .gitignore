@@ -13,7 +13,7 @@ __pycache__/
 **/.ipynb_checkpoints/
 .ipynb_checkpoints/
 
-#Ignore all untracked/
+#Ignore all untracked/ (this is for large files that are generated, that I don't want to save on github)
 **/untracked/
 untracked/
 
