@@ -183,7 +183,7 @@ class LearnableImageFourier(LearnableImage):
         # The following objects do NOT have parameters, and are not changed while optimizing this class
         self.xy_grid =get_xy_grid(height,width,batch_size=1).to(device)
         self.feature_extractor=GaussianFourierFeatureTransform(2, mapping_size, scale)
-        self.features=self.feature_extractor(self.xy_grid).to(self.device) # pre-compute this if we're regressing on images
+        self.features=nn.Parameter(self.feature_extractor(self.xy_grid).to(self.device), requires_grad=False) # pre-compute this if we're regressing on images
         
         H=hidden_dim # Number of hidden features. These 1x1 convolutions act as a per-pixel MLP
         C=num_channels  # Shorter variable names let us align the code better
@@ -196,12 +196,12 @@ class LearnableImageFourier(LearnableImage):
                 nn.Sigmoid(),
             ).to(self.device)
     
-    def project(self,uv_maps):
-        #TODO: Check if this function works well...
-        #Right now consider it untested
-        assert len(uv_maps.shape)==(4), 'uv_maps should be BCHW'
-        assert uv_maps.shape[1]==2, 'Should have two channels: u,v'
-        return self.model(self.feature_extractor(uv_maps))
+    #def project(self,uv_maps):
+    #    #TODO: Check if this function works well...
+    #    #Right now consider it untested
+    #    assert len(uv_maps.shape)==(4), 'uv_maps should be BCHW'
+    #    assert uv_maps.shape[1]==2, 'Should have two channels: u,v'
+    #    return self.model(self.feature_extractor(uv_maps))
     
     def forward(self):
         # Return all the images we've learned
