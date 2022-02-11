@@ -1,5 +1,9 @@
 Organize this TODO
 
+
+progressive growing:  train small then train big
+
+
 BIG QUESTION:
     If we use 6 channels (one for originl UVL and the other the projected texture), can we avoid having to use the texture reality loss? 
         * Are both together better than either one?
@@ -7,8 +11,6 @@ BIG QUESTION:
         * We might add another channel, a single channel from a pixel-wise MLP that takes normals and returns values for lighting...
 
 TODO:
-    Keep track of losses so we can graph them. Maybe even use Wandb?
-
 
 For presentation:
   Create animations of evolution over time. Note how the new one prefers circular rings at first, and the weird artifacts.
