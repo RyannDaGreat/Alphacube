@@ -279,7 +279,11 @@ class MUNIT_Trainer(nn.Module):
         self.loss_gen_total = loss_gen_total.item()
 
 
-    def sample(self, x_a, x_b):
+    def sample(self, x_a, x_b, with_grad=False):
+
+        if not with_grad:
+            with torch.no_grad():
+                return self.sample_a2b(x_a, with_grad=True)
 
         x_a_original = x_a #This is the UVL map
 
@@ -345,10 +349,14 @@ class MUNIT_Trainer(nn.Module):
                x_b, x_b_recon, x_ba[:,:3], x_ba[:,3:], x_bab
         # return x_a_original, x_a, x_a_recon, x_ab, x_ab_rand, x_aba, x_b, x_b_recon, x_ba, x_bab #We removed all randomness, so x_ab_rand==x_ab exactly (I tested it - it's true. They're identical and therefore redundant)
 
-    def sample_a2b(self, x_a):
+    def sample_a2b(self, x_a, with_grad=False):
         #This code is very similar to self.sample(), except it has a few parts removed for the sake of efficiency.
         #If you ever want to modify the functionality of this function, make sure you modify it in self.sample() too
         #TODO: Remove this redundancy lol
+
+        if not with_grad:
+            with torch.no_grad():
+                return self.sample_a2b(x_a, with_grad=True)
 
         x_a, _, _ = self.project_texture_pack(x_a)
 
