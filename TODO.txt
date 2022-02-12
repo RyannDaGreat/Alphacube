@@ -2,6 +2,23 @@ Organize this TODO
 
 
 progressive growing:  train small then train big
+    Increase by factor of sqrt(2) because 2 is too much, and as we increase by sqrt(2) twice we double the resolution
+    Can we jump by larger factors if we have a loss that says the larger translations (after being downsampled) should equal the small translation outputs?
+        Maybe do this until the net gets back on it's feet?
+    Maybe slowly/continuously increase size over training time?
+
+
+Try antialiasing? The sample UVL Scene could be downsampled after projection
+
+FASTEST TRAINING METHOD (but complex)
+    - Step 1: do naive image translation (with no texture, just view consistency perhaps) on low resolution for 10,000 or so gens
+    - Extract texture and use as initial neural teture for step 2
+    - Step 2: Start at low resolution, then do full view-consistent-translation with texture for 10,000 or so gen
+    - Keep progressively increasing resolution
+
+NEW RESEARCH IDEAS:
+    **** can consistency across image zooms/translations improve general image to image translation for any domain (even cyclegan etc)???
+    MSSSIM for NERF
 
 
 BIG QUESTION:
@@ -11,6 +28,9 @@ BIG QUESTION:
         * We might add another channel, a single channel from a pixel-wise MLP that takes normals and returns values for lighting...
 
 TODO:
+    Make every version toggleable from config. For example, using 3 instad of 6 channels or not using textures or consistency loss. THis will be good for ablations.
+
+***As it stands now, the generator and discriminator will have more say when there is less view consistency loss. In other words, as you zoom in, it will act more like vanilla translation. Should we scale the gen/discrim loss by this to keep them in sync?
 
 For presentation:
   Create animations of evolution over time. Note how the new one prefers circular rings at first, and the weird artifacts.
