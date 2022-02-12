@@ -283,7 +283,7 @@ class MUNIT_Trainer(nn.Module):
 
         if not with_grad:
             with torch.no_grad():
-                return self.sample_a2b(x_a, with_grad=True)
+                return self.sample(x_a, x_b, with_grad=True)
 
         x_a_original = x_a #This is the UVL map
 
