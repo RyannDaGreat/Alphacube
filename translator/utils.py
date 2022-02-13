@@ -3,18 +3,14 @@ Copyright (C) 2018 NVIDIA Corporation.  All rights reserved.
 Licensed under the CC BY-NC-SA 4.0 license (https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode).
 """
 from data             import ImageFolder
-from networks         import Vgg16
-from torch.autograd   import Variable
 from torch.optim      import lr_scheduler
 from torch.utils.data import DataLoader
-from torchvision      import transforms
 
 import math
 import numpy as np
 import os
 import time
 import torch
-import torch.nn as nn
 import torch.nn.init as init
 import torchvision.utils as vutils
 import yaml
