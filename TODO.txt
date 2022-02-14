@@ -1,12 +1,20 @@
 Organize this TODO
 
+Try getting shadow maps by subtracting average texture from individual images. 
+StylegGAN3: Can this solve the flickering problems?
 
 progressive growing:  train small then train big
     Increase by factor of sqrt(2) because 2 is too much, and as we increase by sqrt(2) twice we double the resolution
     Can we jump by larger factors if we have a loss that says the larger translations (after being downsampled) should equal the small translation outputs?
         Maybe do this until the net gets back on it's feet?
     Maybe slowly/continuously increase size over training time?
-
+     *NOTE: When texture_multiplier is low, it *immediately* distinguishes the cube from the background. For some reason, it ignores the cube we gave it in the other 3 channels!
+        I turned texture_multiplier low and turned weight decay off, but the resulting texture is *still* blueish....why?
+        THe other 3 chanels dont hurt...theyre not slower or worse...but seemm unnessecary. Make them toggleable.
+        Dueing progressive training, start off with low texture_multiplier (like .5) then later make it big (like 5)
+            Maybe fade out UVL instead?
+    Res 64 is min resolution to make network not crash
+    Res 64 doesn't use the full GPU ( i bet the data loading is the bottleneck and it can't keep up with the gpu)
 
 Try antialiasing? The sample UVL Scene could be downsampled after projection
 
