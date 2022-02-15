@@ -68,6 +68,10 @@ for f in os.listdir(runPath):
 # Start training
 iterations = trainer.resume(checkpoint_directory, hyperparameters=config) if opts.resume else 0
 
+def save_checkpoint():
+    trainer.save(checkpoint_directory, iterations)
+
+
 try:
     while True:
         for it, (images_a, images_b) in enumerate(zip(train_loader_a, train_loader_b)):
@@ -107,7 +111,7 @@ try:
 
             # Save network weights
             if (iterations + 1) % config['snapshot_save_iter'] == 0:
-                trainer.save(checkpoint_directory, iterations)
+                save_checkpoint()
 
             iterations += 1
             if iterations >= max_iter:
