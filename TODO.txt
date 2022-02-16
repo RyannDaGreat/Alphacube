@@ -1,3 +1,6 @@
+
+Don't name the Sunkist experiment 'config'!
+
 Organize this TODO
 
 Try getting shadow maps by subtracting average texture from individual images. 
