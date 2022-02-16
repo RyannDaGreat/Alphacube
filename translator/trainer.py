@@ -25,7 +25,7 @@ import upper.source.learnable_textures as learnable_textures
 label_values = [0,255]
 texture_loss_weight = 20
 view_consistency_version = 'std'
-texture_multiplier = .5
+texture_multiplier = 1
 texture_reality_loss_weight = 2 #Gotta rename this; it controls how much the texture and translations have to match
 
 class MUNIT_Trainer(nn.Module):
