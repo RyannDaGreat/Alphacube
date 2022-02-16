@@ -172,6 +172,8 @@ class LearnableImageFourier(LearnableImage):
                  device      :str=None, # Please set this correctly if you want GPU
                 ):
         #An image paramterized by a fourier features fed into an MLP
+        #The possible output range of these images is between 0 and 1
+        #In other words, no pixel will ever have a value <0 or >1
         
         super().__init__(height,width,num_channels)
         
