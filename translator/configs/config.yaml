@@ -77,4 +77,4 @@ new_size_max_b: 256               # first (randomly) resize the shortest image s
 #     64: μ=0.1981049444,  σ=0.0281622
 #    128: μ=0.29
 
-data_root: ./datasets/alphacube   # dataset folder location
+data_root: ./datasets/sunkist   # dataset folder location
