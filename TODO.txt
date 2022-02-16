@@ -6,6 +6,17 @@ Organize this TODO
 Try getting shadow maps by subtracting average texture from individual images. 
 StylegGAN3: Can this solve the flickering problems?
 
+ADVANTAGES OVER 3D SCANS:
+    Shadows, Reflections handled
+    Cleaner geometry
+    Unsupervised
+    Can recover UV's from photos
+    Combines with cyclegan in one step view-consistently
+    Hopefully: Can be applied to random junk objects
+    Hopefully: Can artistically style 3d objects
+
+
+Add labels to the output images...? maybe...
 
 HOW TO GET REFLECTIONS TO WORK:
     We add the reflection channels from the blender models into the objects.
@@ -13,6 +24,10 @@ HOW TO GET REFLECTIONS TO WORK:
     **If we do this, does it make sense to have cycle-consistency wth matte objects to their reflection vectors? Alphacube for example....
 
 ***An interesting extension: Enhancing the photo-to-uv part of this. If we could do that.....oh boy.....we'd have object localization down to a sciecne!
+    TO DO THIS: Apply a view consistency loss between the RECOVERED FAKE UVL map from real images, and those real images!
+
+An idea to make segmentations partially work:
+    Can we use Gatys et all-esque neural style instea of just msssim+colors?
 
 How do screen space reflections and AO work? Could I make it learned somehow?
 
