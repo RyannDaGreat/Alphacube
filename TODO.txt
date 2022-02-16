@@ -3,6 +3,20 @@ Organize this TODO
 Try getting shadow maps by subtracting average texture from individual images. 
 StylegGAN3: Can this solve the flickering problems?
 
+
+HOW TO GET REFLECTIONS TO WORK:
+    We add the reflection channels from the blender models into the objects.
+    We might want a bunch of 1x1 convolutions somewhere....not quite sure where to put them yet. Perhaps add them to the very end? 
+    **If we do this, does it make sense to have cycle-consistency wth matte objects to their reflection vectors? Alphacube for example....
+
+***An interesting extension: Enhancing the photo-to-uv part of this. If we could do that.....oh boy.....we'd have object localization down to a sciecne!
+
+How do screen space reflections and AO work? Could I make it learned somehow?
+
+Often robot arms will be picking up many of the *Same* objects. Can we benefit from having many objects with the same texture (and perhaps even small variants of it?)
+
+Create a way to save config files for every stage....I want records of these on the checkpoints....I want to know what worked and what didn't on which iterations....
+
 progressive growing:  train small then train big
     Increase by factor of sqrt(2) because 2 is too much, and as we increase by sqrt(2) twice we double the resolution
     Can we jump by larger factors if we have a loss that says the larger translations (after being downsampled) should equal the small translation outputs?
