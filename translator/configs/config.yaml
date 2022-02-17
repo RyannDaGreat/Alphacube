@@ -68,10 +68,10 @@ crop_image_height_translation: 256                      # random crop image of t
 crop_image_width_translation: 256                       # random crop image of this width
 
 #GOOD RESOLUTION STAGES TO TRAIN BY:
-new_size_min_a: 550               # first (randomly) resize the shortest image side to this size
-new_size_max_a: 550               # first (randomly) resize the shortest image side to this size
-new_size_min_b: 550               # first (randomly) resize the shortest image side to this size
-new_size_max_b: 550               # first (randomly) resize the shortest image side to this size
+new_size_min_a: 650               # first (randomly) resize the shortest image side to this size
+new_size_max_a: 650               # first (randomly) resize the shortest image side to this size
+new_size_min_b: 650               # first (randomly) resize the shortest image side to this size
+new_size_max_b: 650               # first (randomly) resize the shortest image side to this size
 #   64, 128, 256, 300, 320, 450
 #TIMING PER ITER:
 #     64: μ=0.1981049444,  σ=0.0281622
