@@ -216,3 +216,13 @@ def unproject_translations_individually(scene_translations : torch.Tensor,
     
     return output_textures, output_weights
 
+def combine_individual_unprojections(textures, weights):
+    # Returns the same shapes and types as unproject_translations, but takes less vram to compute 
+    #
+    # When using unproject_translations on a large number of frames (like 1000 frames), it will run out of vram
+    # To recover a texture from this many frames, use combine_individual_unprojections(unproject_translations_individually(...))
+    # Instead of unproject_translations(...)
+
+    output_weights = weights.sum(0)[:,None]+.01
+    output_textures = (textures*weights[:,:,None]).sum(0)/(output_weights)
+    return output_textures, output_weights
