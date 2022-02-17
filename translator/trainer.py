@@ -22,7 +22,7 @@ import upper.source.view_consistency   as view_consistency
 import upper.source.learnable_textures as learnable_textures
 
 
-label_values = [0,255]
+label_values = [0,127,255]
 texture_loss_weight = 20
 view_consistency_version = 'std'
 texture_multiplier = 1
