@@ -16,6 +16,19 @@ ADVANTAGES OVER 3D SCANS:
     Hopefully: Can artistically style 3d objects
 
 
+DIRECTIONS:
+    Reconstuct UVL from photo
+    Enhance metallic rendering
+    Stylize 3d models
+    Robotic learning improvements
+        Both from single and multi-images
+    Possibly video games? (Pinball or foozeball or chess etc)
+
+UV RECORVERY IDEAS:
+    L2/MSSIM( photo, a2b( project/concat/etc( b2a( photo ))) )     (Nice because intuitive loss, uses MSSIM instead of L2 pixelwise)
+    L2( enc_b(photo), enc_a(project/concat/etc( b2a( photo ))) )  (loss in latent space)
+    Add to the view consistency loss a few more recovered textures:  unproject( photos, b2a( photo ).uvl )    (maybe multiply their weights by a hyperparameter that increases over time)
+
 Add labels to the output images...? maybe...
 
 HOW TO GET REFLECTIONS TO WORK:
