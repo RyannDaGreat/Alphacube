@@ -58,7 +58,8 @@ def unproject_translations(scene_translations : torch.Tensor,
     #Validate scene_uvs
     batch_size, two, scene_height, scene_width = scene_uvs.shape
     assert two == 2, "scene_uvs should have exactly two channels"
-    assert scene_uvs.min() >= 0 and scene_uvs.max() <=1, 'All u,v values should be between 0 and 1'
+    assert scene_uvs.min() >= 0 and scene_uvs.max() <=1, 'All u,v values should be between 0 and 1 (not %.4f and %.4f)' % \
+          (scene_uvs.min(),         scene_uvs.max())
 
     #Validate scene_labels
     assert     scene_labels.shape == (batch_size, scene_height, scene_width)
