@@ -71,10 +71,10 @@ class ViewConsistencyLoss(nn.Module):
                                                                                               self.recovery_height,
                                                                                               self.recovery_width )
         ##TODO Make this optional
-        #brightness = ((recovered_texture_packs**2).sum(dim=-3,keepdims=True))**.5
-        #epsilon=.1#As epsilon goes to 0, we judge more by hue
-        #brightness += epsilon
-        #recovered_texture_packs = recovered_texture_packs/brightness
+        brightness = ((recovered_texture_packs**2).sum(dim=-3,keepdims=True))**.5
+        epsilon=.1#As epsilon goes to 0, we judge more by hue
+        brightness += epsilon
+        recovered_texture_packs = recovered_texture_packs/brightness
 
         
         variances=[]
