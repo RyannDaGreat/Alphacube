@@ -136,7 +136,7 @@ class MUNIT_Trainer(nn.Module):
 
     def recon_criterion(self, input, target):
         output  = torch.mean(torch.abs(input - target))
-        # output += -msssim(input,target,normalize=True)
+        output += -msssim(input,target,normalize=True)
         return output
 
 
@@ -445,6 +445,7 @@ class MUNIT_Trainer(nn.Module):
                 self.gen_opt.load_state_dict(state_dict['gen'])
                 self.tex_opt.load_state_dict(state_dict['tex'])
             else:
+                #Sometimes you might delete optimizer.pt to recover from NAN errors
                 rp.fansi_print("optimizer.pt not found: initializing it without loading it from a checkpoint!",'yellow','bold')
 
             # Reinitilize schedulers
