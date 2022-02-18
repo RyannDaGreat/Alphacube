@@ -158,14 +158,14 @@ def unproject_translations(scene_translations : torch.Tensor,
     if version=='low memory':
         #This version is slower than 'fast' but uses less memory
         #TODO: Benchmark speed and memory differences quantitatively
-        generator = unproject_translations_individually(scene_translations   ,
-                                                        scene_uvs            ,
-                                                        scene_labels         ,
-                                                        num_labels           ,
-                                                        output_height        ,
-                                                        output_width         ,
-                                                        version = 'fast'     ,
-                                                        return_generator=True)
+        #It uses less memory with rspect to the batch size
+        generator = unproject_translations_individually_generator(scene_translations,
+                                                                  scene_uvs         ,
+                                                                  scene_labels      ,
+                                                                  num_labels        ,
+                                                                  output_height     ,
+                                                                  output_width      ,
+                                                                  version = 'fast'  )
 
         output_mean, output_weight = combine_individual_unprojections(generator)
 
@@ -211,20 +211,19 @@ def unproject_translations_individually(scene_translations : torch.Tensor,
                                         num_labels         : int         ,
                                         output_height      : int         ,
                                         output_width       : int         ,
-                                        version            : str='fast'  ,
-                                        return_generator   : bool=False  ):
+                                        version            : str='fast'  ):
     #Takes in and spits out the same tensor shapes as unproject_translations(...), except BS is at the beginning
     #That is to say, this outputs (textures,weights) aka (BS NL NC TH TW,  BS NC TH TW) tensors
     #(See the unproject_translations(...) function to see what those two-letter dimension acronyms mean)
     #However, this version applies unproject_translations(...) to each element of the batch individually
     #
-    #The return_generator option is used to save memory, instead of returning a giant tensor. It's good to pair that with
-    #   scene_translations, scene_uvs, and scene_labels being generators too. When return_generator is True, this function 
-    #   returns a generator that yields texture, weight pairs instead of two textures,weights tensors.
+    #NOTE: This function shares redundant code with unproject_translations_individually_generator
+    #This function COULD be made to USE unproject_translations_individually_generator to generate its output
+    #HOWEVER, I'm not sure if unproject_translations_individually_generator (which is used to save memory in unproject_translations's 'low memory' version) actually saves memory
+    #So, I don't want to commit to that change...yet.
     
-    if not return_generator:
-        output_textures=[]
-        output_weights =[]
+    output_textures=[]
+    output_weights =[]
     
     for scene_translation, scene_uv, scene_label in zip(scene_translations, scene_uvs, scene_labels):
     
@@ -234,17 +233,14 @@ def unproject_translations_individually(scene_translations : torch.Tensor,
                                                  num_labels             ,
                                                  output_height          ,
                                                  output_width           )
-        if not return_generator:
-            output_textures.append(texture)
-            output_weights .append(weight )
-        else:
-            yield texture, weight
+        output_textures.append(texture)
+        output_weights .append(weight )
         
-    if not return_generator:
-        output_textures=torch.stack(output_textures,dim=0)
-        output_weights =torch.stack(output_weights ,dim=0)
-        
-        return output_textures, output_weights
+    output_textures=torch.stack(output_textures,dim=0)
+    output_weights =torch.stack(output_weights ,dim=0)
+    
+    return output_textures, output_weights
+
 
 def combine_individual_unprojections(textures_and_weights_generator):
     #TODO: Make this even more efficient (combine it with unproject_translations_individually so it doesn't need to remember them all at once, going from O(n) to O(1) space. Make this a mode of unproject_translations)
@@ -284,3 +280,26 @@ def combine_individual_unprojections(textures_and_weights_generator):
 
     return output_texture, output_weight
 
+
+def unproject_translations_individually_generator(scene_translations : torch.Tensor,
+                                                  scene_uvs          : torch.Tensor,
+                                                  scene_labels       : torch.Tensor,
+                                                  num_labels         : int         ,
+                                                  output_height      : int         ,
+                                                  output_width       : int         ,
+                                                  version            : str='fast'  ):
+    #The return_generator option is used to save memory, instead of returning a giant tensor. It's good to pair that with
+    #   scene_translations, scene_uvs, and scene_labels being generators too. When return_generator is True, this function 
+    #   returns a generator that yields texture, weight pairs instead of two textures,weights tensors.
+
+    assert version!='low memory', 'Cant use the "low_memory" version in unproject_translations in unproject_translations_individually_generator, because that would recurse infinitely'
+    
+    for scene_translation, scene_uv, scene_label in zip(scene_translations, scene_uvs, scene_labels):
+    
+        texture, weight = unproject_translations(scene_translation[None],
+                                                 scene_uv         [None],
+                                                 scene_label      [None],
+                                                 num_labels             ,
+                                                 output_height          ,
+                                                 output_width           )
+        yield texture, weight
