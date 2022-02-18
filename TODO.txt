@@ -16,6 +16,8 @@ ADVANTAGES OVER 3D SCANS:
     Hopefully: Can artistically style 3d objects
 
 
+I have a LOT of tests I want to do...but only one computer. I need to make the lab's computers more convenient somehow....minimally my laptop should be able to mosh into them (in one step). Also they should be able to host jupyter servers and stuff. Zerotier might be the solution?
+
 DIRECTIONS:
     Reconstuct UVL from photo
     Enhance metallic rendering
@@ -24,10 +26,27 @@ DIRECTIONS:
         Both from single and multi-images
     Possibly video games? (Pinball or foozeball or chess etc)
 
+
+Make better visulizations, slides, and names for things. Might need a new repo when I'm done...
+
 UV RECORVERY IDEAS:
     L2/MSSIM( photo, a2b( project/concat/etc( b2a( photo ))) )     (Nice because intuitive loss, uses MSSIM instead of L2 pixelwise)
     L2( enc_b(photo), enc_a(project/concat/etc( b2a( photo ))) )  (loss in latent space)
     Add to the view consistency loss a few more recovered textures:  unproject( photos, b2a( photo ).uvl )    (maybe multiply their weights by a hyperparameter that increases over time)
+
+ALTERNATIVE TO CURRENT VIEW CONSISTENCY LOSS:
+    Current consistency loss can't use MSSSIM. Current consistency loss is almost (or maybe exactly) equivalent to minimizing the distance to the average texture. MSSSIM can't do that because the textures between views mightnot be consistent...
+	But what we can do: Get the average texture, reproject it back onto the UV's, and use a MSSSIM lsos between each translation and it's recovered-texture reprojection.
+
+CHERRY PICKING:
+	Instead of using random uniform samples, perhaps choose a random sample then use other images that have common pixels for the rest of the batch.
+
+THINGS TO CLEAN UP:
+	The blender code (debugging)
+	The dataset paths in ./datasets
+		Referenced in other files too
+	translator_tutorial.ipynb
+	Renaming things such as texture consistency loss etc
 
 Add labels to the output images...? maybe...
 
