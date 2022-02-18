@@ -76,7 +76,7 @@ def unproject_translations(scene_translations : torch.Tensor,
     assert output_width  >= 1
 
     #Validate version
-    assert version in ['fast','slow']
+    assert version in ['fast','slow','low memory']
 
 
     #------- Outputs Calculation -------
@@ -155,6 +155,25 @@ def unproject_translations(scene_translations : torch.Tensor,
         output_sum    = output_sum   .view(NL,OH,OW,NC)
         output_weight = output_weight.view(NL,OH,OW   )
 
+    if version=='low memory':
+        #This version is slower than 'fast' but uses less memory
+        #TODO: Benchmark speed and memory differences quantitatively
+        generator = unproject_translations_individually(scene_translations   ,
+                                                        scene_uvs            ,
+                                                        scene_labels         ,
+                                                        num_labels           ,
+                                                        output_height        ,
+                                                        output_width         ,
+                                                        version = 'fast'     ,
+                                                        return_generator=True)
+
+        output_mean, output_weight = combine_individual_unprojections(generator)
+
+        assert output_mean  .shape == (num_labels, num_channels, output_height, output_width)
+        assert output_weight.shape == (num_labels,               output_height, output_width)
+
+        return output_mean, output_weight
+
     if version=='slow':
         #THE SUPER-SLOW VERSION:    
         # This version is very slow, but much easier to understand. 
@@ -192,14 +211,20 @@ def unproject_translations_individually(scene_translations : torch.Tensor,
                                         num_labels         : int         ,
                                         output_height      : int         ,
                                         output_width       : int         ,
-                                        version            : str='fast'  ):
+                                        version            : str='fast'  ,
+                                        return_generator   : bool=False  ):
     #Takes in and spits out the same tensor shapes as unproject_translations(...), except BS is at the beginning
     #That is to say, this outputs (textures,weights) aka (BS NL NC TH TW,  BS NC TH TW) tensors
     #(See the unproject_translations(...) function to see what those two-letter dimension acronyms mean)
     #However, this version applies unproject_translations(...) to each element of the batch individually
+    #
+    #The return_generator option is used to save memory, instead of returning a giant tensor. It's good to pair that with
+    #   scene_translations, scene_uvs, and scene_labels being generators too. When return_generator is True, this function 
+    #   returns a generator that yields texture, weight pairs instead of two textures,weights tensors.
     
-    output_textures=[]
-    output_weights =[]
+    if not return_generator:
+        output_textures=[]
+        output_weights =[]
     
     for scene_translation, scene_uv, scene_label in zip(scene_translations, scene_uvs, scene_labels):
     
@@ -209,22 +234,53 @@ def unproject_translations_individually(scene_translations : torch.Tensor,
                                                  num_labels             ,
                                                  output_height          ,
                                                  output_width           )
-        output_textures.append(texture)
-        output_weights .append(weight )
+        if not return_generator:
+            output_textures.append(texture)
+            output_weights .append(weight )
+        else:
+            yield texture, weight
         
-    output_textures=torch.stack(output_textures,dim=0)
-    output_weights =torch.stack(output_weights ,dim=0)
-    
-    return output_textures, output_weights
+    if not return_generator:
+        output_textures=torch.stack(output_textures,dim=0)
+        output_weights =torch.stack(output_weights ,dim=0)
+        
+        return output_textures, output_weights
 
-def combine_individual_unprojections(textures, weights):
+def combine_individual_unprojections(textures_and_weights_generator):
     #TODO: Make this even more efficient (combine it with unproject_translations_individually so it doesn't need to remember them all at once, going from O(n) to O(1) space. Make this a mode of unproject_translations)
-    # Returns the same shapes and types as unproject_translations, but takes less vram to compute 
+    # Returns the same shapes and types as unproject_translations, but takes less vram to compute
     #
     # When using unproject_translations on a large number of frames (like 1000 frames), it will run out of vram
     # To recover a texture from this many frames, use combine_individual_unprojections(unproject_translations_individually(...))
     # Instead of unproject_translations(...)
+    #
+    #textures and weights can be generators to save memory (instead of having a batch dimension)
 
-    output_weights = weights.sum(0)[:,None]+.01
-    output_textures = (textures*weights[:,:,None]).sum(0)/(output_weights)
-    return output_textures, output_weights
+    # output_weights = weights.sum(0)[:,None]+.01
+    # output_textures = (textures*weights[:,:,None]).sum(0)/(output_weights)
+    # return output_textures, output_weights
+
+    output_texture = None
+    output_weight  = None
+
+    for texture, weight in textures_and_weights_generator:
+        assert len(weight .shape)==3, 'Should be [NL, TH, HW]: '    +str(weight .shape)
+        assert len(texture.shape)==4, 'Should be [NL, NC, TH, HW]: '+str(texture.shape)
+
+        if output_texture is None:
+            #Initialize the outputs
+            output_texture=torch.zeros_like(texture)
+            output_weight =torch.zeros_like(weight )
+
+        output_texture += texture * weight[:,None]
+        output_weight  += weight
+
+    assert output_texture is not None and output_weight is not None, 'Please give more than 0 textures and weights!'
+
+    output_texture /= output_weight[:,None] + .01
+
+    assert len(output_weight .shape)==3, 'Should be [NL, TH, HW]: '    +str(output_weight .shape)
+    assert len(output_texture.shape)==4, 'Should be [NL, NC, TH, HW]: '+str(output_texture.shape)
+
+    return output_texture, output_weight
+
