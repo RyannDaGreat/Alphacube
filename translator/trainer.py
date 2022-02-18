@@ -21,6 +21,7 @@ import upper.source.scene_reader       as scene_reader
 import upper.source.view_consistency   as view_consistency
 import upper.source.learnable_textures as learnable_textures
 
+import rp
 
 label_values = [0,127,255]
 texture_loss_weight = 20
@@ -134,8 +135,9 @@ class MUNIT_Trainer(nn.Module):
 
 
     def recon_criterion(self, input, target):
-        # return -msssim(input,target,normalize=True)
-        return torch.mean(torch.abs(input - target))
+        output  = torch.mean(torch.abs(input - target))
+        # output += -msssim(input,target,normalize=True)
+        return output
 
 
     def forward(self, x_a, x_b):
@@ -437,10 +439,13 @@ class MUNIT_Trainer(nn.Module):
             self.dis_b.load_state_dict(state_dict['b'])
 
             # Load optimizers
-            state_dict = torch.load(os.path.join(checkpoint_dir, 'optimizer.pt'))
-            self.dis_opt.load_state_dict(state_dict['dis'])
-            self.gen_opt.load_state_dict(state_dict['gen'])
-            self.tex_opt.load_state_dict(state_dict['tex'])
+            if rp.file_exists('optimizer.pt'):
+                state_dict = torch.load(os.path.join(checkpoint_dir, 'optimizer.pt'))
+                self.dis_opt.load_state_dict(state_dict['dis'])
+                self.gen_opt.load_state_dict(state_dict['gen'])
+                self.tex_opt.load_state_dict(state_dict['tex'])
+            else:
+                rp.fansi_print("optimizer.pt not found: initializing it without loading it from a checkpoint!",'yellow','bold')
 
             # Reinitilize schedulers
             self.dis_scheduler = get_scheduler(self.dis_opt, hyperparameters, iterations)
