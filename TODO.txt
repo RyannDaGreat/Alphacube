@@ -1,3 +1,5 @@
+ADD INTERPOLATION TO PROJECTOR! It needs to be differentiable if we want to put loss on UV textures etc.
+    THOUGH....these gradients might not be excellent........maybe make the recovery resolution small? lol...idk...
 
 Don't name the Sunkist experiment 'config'!
 
