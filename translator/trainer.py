@@ -380,6 +380,30 @@ class MUNIT_Trainer(nn.Module):
 
         return x_ab
 
+    def sample_b2a(self, x_b, with_grad=False):
+        #This function is almost identical to sample_a2b
+
+        if not with_grad:
+            with torch.no_grad():
+                return self.sample_b2a(x_b, with_grad=True)
+
+        self.eval()
+        x_ba = []
+
+        for i in range(x_b.size(0)):
+            # get individual images from list:
+            x_b_ = x_b[i].unsqueeze(0)
+
+            c_b   = self.gen_b.encode(x_b_)
+            x_ba_ = self.gen_a.decode(c_b )
+
+            x_ba.append(x_ba_)
+
+        x_ba=(torch.cat(x_ba)+1)/2
+
+        self.train()
+
+        return x_ba
 
     def dis_update(self, x_a, x_b, hyperparameters):
 
