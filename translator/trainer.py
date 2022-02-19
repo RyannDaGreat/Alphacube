@@ -439,8 +439,9 @@ class MUNIT_Trainer(nn.Module):
             self.dis_b.load_state_dict(state_dict['b'])
 
             # Load optimizers
-            if rp.file_exists('optimizer.pt'):
-                state_dict = torch.load(os.path.join(checkpoint_dir, 'optimizer.pt'))
+            checkpoint_path = os.path.join(checkpoint_dir, 'optimizer.pt')
+            if rp.file_exists(checkpoint_path):
+                state_dict = torch.load(checkpoint_path)
                 self.dis_opt.load_state_dict(state_dict['dis'])
                 self.gen_opt.load_state_dict(state_dict['gen'])
                 self.tex_opt.load_state_dict(state_dict['tex'])
