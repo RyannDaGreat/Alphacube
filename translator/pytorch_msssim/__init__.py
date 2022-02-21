@@ -70,9 +70,48 @@ def ssim(img1, img2, window_size=11, window=None, size_average=True, full=False,
     return ret
 
 
+_weights_cache={}
+def _get_weights(device):
+    #I found in my profiler that the Tensor.to() function took the majority of the time in the msssim function
+
+    #BEFORE THIS CHANGE:
+    #    22.401 exeval  r.py:6625
+    #    └─ 22.401 run_code  patch_linecache.py:111
+    #       └─ 22.401 <module>  <rp-input-2>:2
+    #          ├─ 17.325 gen_update  trainer.py:162
+    #          │  ├─ 3.873 recon_criterion  trainer.py:137
+    #          │  │  └─ 3.865 msssim  pytorch_msssim/__init__.py:73
+    #          │  │     ├─ 3.370 Tensor.to  <built-in>:0
+    #          │  │     └─ 0.444 ssim  pytorch_msssim/__init__.py:21
+    #          │  │        └─ 0.312 [self]
+    #
+    #    3.865/22.401 = 0.1725
+
+    #AFTER THIS CHANGE:
+    #    160.117 exeval  r.py:6625
+    #    └─ 160.117 run_code  patch_linecache.py:111
+    #       └─ 160.117 <module>  <rp-input-2>:2
+    #          │  ├─ 27.977 recon_criterion  trainer.py:137
+    #          │  │  └─ 27.925 msssim  pytorch_msssim/__init__.py:83
+    #          │  │     └─ 27.465 ssim  pytorch_msssim/__init__.py:21
+    #          │  │        └─ 26.725 [self]
+    #
+    #    27.977/160.117 = 0.1747
+
+    # Confusingly...the proportion says the old version without cacheing is better...
+
+
+    if device not in _weights_cache:
+        weights = torch.FloatTensor([0.0448, 0.2856, 0.3001, 0.2363, 0.1333]).to(device)
+        _weights_cache[device]=weights
+    return _weights_cache[device]
+
+    
+
 def msssim(img1, img2, window_size=11, size_average=True, val_range=None, normalize=False):
     device = img1.device
-    weights = torch.FloatTensor([0.0448, 0.2856, 0.3001, 0.2363, 0.1333]).to(device)
+    # weights = torch.FloatTensor([0.0448, 0.2856, 0.3001, 0.2363, 0.1333]).to(device)
+    weights = _get_weights(device)
     levels = weights.size()[0]
     mssim = []
     mcs = []
