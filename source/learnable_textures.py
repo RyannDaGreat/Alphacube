@@ -14,6 +14,53 @@ import rp
 ######## HELPER FUNCTIONS ########
 ##################################
 
+def argmin_total_modulo(signal, periods, x_min=0, x_max=1, num_samples=1000):
+    #This function is used to help recover UV values from their random, possibly noisy fourier features
+    #The maximum accuracy of the output UV values is 1/num_samples (assuming UV values are in the range [0,1])
+    #The "Signal" input is the recovered angle from the sine/cosine fourier features
+    #Input assumption: signal = x % periods
+    #Goal: Recover x in the range [x_min, x_max]
+    #It can tolerate some noise in the signal, but a little less noise is a lot better
+    #This function DOES NOT preserve gradient! It's extremely discrete by nature
+    #TODO: Take less VRAM!!! The vram shouldn't scale with num_samples
+    #Also, in the future, it would be nice to do something smarter than spamming samplzes lol
+    #Based on: https://www.desmos.com/calculator/dnp0zfxqy6
+    #EXAMPLE:
+    #    #This is the same example as on the above desmos link
+    #    periods = torch.tensor([.1984,-.528,.723,-.9845,.0852,-.0684])
+    #    X=torch.linspace(0,1,25)
+    #    signal=X[None]%periods[:,None]
+    #    X_pred=argmin_total_modulo(signal,periods,num_samples=100)
+    #    error=X-X_pred
+    #    ans=error
+
+    assert len(periods.shape)==1, 'periods should be a vector'
+    assert len(signal)==len(periods)
+    assert signal.device==periods.device
+    
+    device = signal.device
+
+    x_samples = torch.linspace(x_min, x_max, num_samples)
+    
+    min_error = torch.ones (signal.shape[1:]).to(device)*9999
+    best_x    = torch.zeros(signal.shape[1:]).to(device) # These initial values shouldn't matter
+
+    for x in x_samples:
+        pred_signal = x % periods
+        pred_signal = pred_signal[:,None]
+        assert pred_signal.shape == periods.shape + (1,)
+        
+        error = (pred_signal - signal) ** 2
+        error = error.sum(0)
+
+        best_x   [error < min_error] = x
+        min_error=torch.minimum(min_error,error)
+
+    output=best_x
+
+    assert output.shape==signal.shape[1:]
+    return output
+
 
 class GaussianFourierFeatureTransform(nn.Module):
     """
