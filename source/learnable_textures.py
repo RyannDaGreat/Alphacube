@@ -15,7 +15,7 @@ import rp
 ##################################
 
 
-class GaussianFourierFeatureTransform:
+class GaussianFourierFeatureTransform(nn.Module):
     """
     Original authors: https://github.com/ndahlquist/pytorch-fourier-feature-networks
     
@@ -42,7 +42,7 @@ class GaussianFourierFeatureTransform:
 
         self.num_channels = num_channels
         self.num_features = num_features
-        self.B = torch.randn((num_channels, num_features)) * scale
+        self.B = nn.Parameter(torch.randn(num_channels, num_features) * scale, requires_grad=False)
 
     def __call__(self, x):
         assert x.dim() == 4, 'Expected 4D input (got {}D input)'.format(x.dim())
@@ -52,11 +52,11 @@ class GaussianFourierFeatureTransform:
         assert channels == self.num_channels,\
             "Expected input to have {} channels (got {} channels)".format(self.num_channels, channels)
 
-        # Make shape compatible for matmul with _B.
+        # Make shape compatible for matmul with B.
         # From [B, C, W, H] to [(B*W*H), C].
         x = x.permute(0, 2, 3, 1).reshape(batches * width * height, channels)
 
-        x = x @ self.B.to(x.device)
+        x = x @ self.B
 
         # From [(B*W*H), C] to [B, W, H, C]
         x = x.view(batches, width, height, self.num_features)
@@ -191,9 +191,9 @@ class LearnableImageFourier(LearnableImage):
         self.device      =device or 'cuda' if torch.cuda.is_available() else 'cpu'
         
         # The following objects do NOT have parameters, and are not changed while optimizing this class
-        self.uv_grid =get_uv_grid(height,width,batch_size=1).to(device)
-        self.feature_extractor=GaussianFourierFeatureTransform(2, num_features, scale)
-        self.features=nn.Parameter(self.feature_extractor(self.uv_grid).to(self.device), requires_grad=False) # pre-compute this if we're regressing on images
+        self.uv_grid =get_uv_grid(height,width,batch_size=1).to(self.device)
+        self.feature_extractor=GaussianFourierFeatureTransform(2, num_features, scale).to(self.device)
+        self.features=nn.Parameter(self.feature_extractor(self.uv_grid), requires_grad=False) # pre-compute this if we're regressing on images
         
         H=hidden_dim # Number of hidden features. These 1x1 convolutions act as a per-pixel MLP
         C=num_channels  # Shorter variable names let us align the code better
