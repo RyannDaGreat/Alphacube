@@ -89,7 +89,9 @@ class GaussianFourierFeatureTransform(nn.Module):
 
         self.num_channels = num_channels
         self.num_features = num_features
-        self.B = nn.Parameter(torch.randn(num_channels, num_features) * scale, requires_grad=False)
+        
+        #freqs are n-dimensional spatial frequencies, where n=num_channels
+        self.freqs = nn.Parameter(torch.randn(num_channels, num_features) * scale, requires_grad=False)
 
     def __call__(self, x):
         assert x.dim() == 4, 'Expected 4D input (got {}D input)'.format(x.dim())
@@ -99,12 +101,12 @@ class GaussianFourierFeatureTransform(nn.Module):
         assert num_channels == self.num_channels,\
             "Expected input to have {} channels (got {} channels)".format(self.num_channels, num_channels)
 
-        # Make shape compatible for matmul with B.
+        # Make shape compatible for matmul with freqs.
         # From [B, C, H, W] to [(B*H*W), C].
         x = x.permute(0, 2, 3, 1).reshape(batch_size * height * width, num_channels)
 
         # [(B*H*W), C] x [C, F] = [(B*H*W), F]
-        x = x @ self.B
+        x = x @ self.freqs
 
         # From [(B*H*W), F] to [B, H, W, F]
         x = x.view(batch_size, height, width, self.num_features)
