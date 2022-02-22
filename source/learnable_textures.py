@@ -30,6 +30,14 @@ class GaussianFourierFeatureTransform:
     """
 
     def __init__(self, num_input_channels, mapping_size=256, scale=10):
+        #It generates fourier components of Arandom frequencies, not all of them.
+        #The frequencies are determined by a random normal distribution, multiplied by "scale"
+        #So, when "scale" is higher, the fourier features will have higher frequencies    
+        #In learnable_image_tutorial.ipynb, this translates to higher fidelity images.
+        #In other words, 'scale' loosely refers to the X,Y scale of the images
+        #With a high scale, you can learn detailed images with simple MLP's
+        #If it's too high though, it won't really learn anything but high frequency noise
+        
         super().__init__()
 
         self._num_input_channels = num_input_channels
