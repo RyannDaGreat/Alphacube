@@ -93,7 +93,7 @@ class GaussianFourierFeatureTransform(nn.Module):
         #freqs are n-dimensional spatial frequencies, where n=num_channels
         self.freqs = nn.Parameter(torch.randn(num_channels, num_features) * scale, requires_grad=False)
 
-    def __call__(self, x):
+    def forward(self, x):
         assert x.dim() == 4, 'Expected 4D input (got {}D input)'.format(x.dim())
 
         batch_size, num_channels, height, width = x.shape
