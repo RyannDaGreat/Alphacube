@@ -26,10 +26,10 @@ class GaussianFourierFeatureTransform:
        https://people.eecs.berkeley.edu/~bmild/fourfeat/index.html
 
     Given an input of size [batches, num_input_channels, width, height],
-     returns a tensor of size [batches, mapping_size*2, width, height].
+     returns a tensor of size [batches, num_features*2, width, height].
     """
 
-    def __init__(self, num_input_channels, mapping_size=256, scale=10):
+    def __init__(self, num_input_channels, num_features=256, scale=10):
         #It generates fourier components of Arandom frequencies, not all of them.
         #The frequencies are determined by a random normal distribution, multiplied by "scale"
         #So, when "scale" is higher, the fourier features will have higher frequencies    
@@ -41,8 +41,8 @@ class GaussianFourierFeatureTransform:
         super().__init__()
 
         self._num_input_channels = num_input_channels
-        self._mapping_size = mapping_size
-        self._B = torch.randn((num_input_channels, mapping_size)) * scale
+        self._num_features = num_features
+        self._B = torch.randn((num_input_channels, num_features)) * scale
 
     def __call__(self, x):
         assert x.dim() == 4, 'Expected 4D input (got {}D input)'.format(x.dim())
@@ -59,7 +59,7 @@ class GaussianFourierFeatureTransform:
         x = x @ self._B.to(x.device)
 
         # From [(B*W*H), C] to [B, W, H, C]
-        x = x.view(batches, width, height, self._mapping_size)
+        x = x.view(batches, width, height, self._num_features)
         # From [B, W, H, C] to [B, C, W, H]
         x = x.permute(0, 3, 1, 2)
 
@@ -175,7 +175,7 @@ class LearnableImageFourier(LearnableImage):
                  width       :int=256 , # Width of the learnable images
                  num_channels:int=3   , # Number of channels in the images
                  hidden_dim  :int=256 , # Number of dimensions per hidden layer of the MLP
-                 mapping_size:int=128 , # Number of fourier features per coordinate
+                 num_features:int=128 , # Number of fourier features per coordinate
                  scale       :int=10  , # Magnitude of the initial feature noise
                  device      :str=None, # Please set this correctly if you want GPU
                 ):
@@ -186,18 +186,18 @@ class LearnableImageFourier(LearnableImage):
         super().__init__(height,width,num_channels)
         
         self.hidden_dim  =hidden_dim
-        self.mapping_size=mapping_size
+        self.num_features=num_features
         self.scale       =scale
         self.device      =device or 'cuda' if torch.cuda.is_available() else 'cpu'
         
         # The following objects do NOT have parameters, and are not changed while optimizing this class
         self.uv_grid =get_uv_grid(height,width,batch_size=1).to(device)
-        self.feature_extractor=GaussianFourierFeatureTransform(2, mapping_size, scale)
+        self.feature_extractor=GaussianFourierFeatureTransform(2, num_features, scale)
         self.features=nn.Parameter(self.feature_extractor(self.uv_grid).to(self.device), requires_grad=False) # pre-compute this if we're regressing on images
         
         H=hidden_dim # Number of hidden features. These 1x1 convolutions act as a per-pixel MLP
         C=num_channels  # Shorter variable names let us align the code better
-        M=2*mapping_size
+        M=2*num_features
         self.model = nn.Sequential(
                 nn.Conv2d(M, H, kernel_size=1), nn.ReLU(), nn.BatchNorm2d(H),
                 nn.Conv2d(H, H, kernel_size=1), nn.ReLU(), nn.BatchNorm2d(H),
@@ -317,7 +317,7 @@ class LearnableTexturePackFourier(LearnableTexturePack):
                  width       :int=256 ,
                  num_channels:int=3   ,
                  hidden_dim  :int=256 ,
-                 mapping_size:int=128 ,
+                 num_features:int=128 ,
                  scale       :int=10  ,
                  device      :str=None,
                  num_textures:int=1   ):
@@ -326,7 +326,7 @@ class LearnableTexturePackFourier(LearnableTexturePack):
                                                             width       ,
                                                             num_channels,
                                                             hidden_dim  ,
-                                                            mapping_size,
+                                                            num_features,
                                                             scale       ,
                                                             device      )
         
@@ -337,6 +337,6 @@ class LearnableTexturePackFourier(LearnableTexturePack):
                          get_learnable_image)
         
         self.hidden_dim  =hidden_dim  
-        self.mapping_size=mapping_size
+        self.num_features=num_features
         self.scale       =scale       
         self.device      =device      
