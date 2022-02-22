@@ -60,11 +60,16 @@ class GaussianFourierFeatureTransform(nn.Module):
 
         # From [(B*H*W), C] to [B, H, W, C]
         x = x.view(batch_size, height, width, self.num_features)
-        # From [B, H, W, C] to [B, C, H, W]
+        # From [B, H, W, C] to [B, C, H, W 
         x = x.permute(0, 3, 1, 2)
 
         x = 2 * np.pi * x
-        return torch.cat([torch.sin(x), torch.cos(x)], dim=1)
+        
+        output = torch.cat([torch.sin(x), torch.cos(x)], dim=1)
+        
+        assert output.shape==(batch_size, 2*self.num_features, height, width)
+        
+        return output        
     
     
 def get_uv_grid(height:int, width:int, batch_size:int=1)->torch.Tensor:
