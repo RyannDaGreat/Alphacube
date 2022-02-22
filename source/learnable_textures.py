@@ -14,110 +14,6 @@ import rp
 ######## HELPER FUNCTIONS ########
 ##################################
 
-def argmin_total_modulo_1d(signal, periods, x_min=0, x_max=1, num_samples=1000):
-    #This function is a simpler version of argmin_total_modulo_2d, for explanatory purposes
-    #This function is used to help recover UV values from their random, possibly noisy fourier features
-    #The maximum accuracy of the output UV values is 1/num_samples (assuming UV values are in the range [0,1])
-    #The "Signal" input is the recovered angle from the sine/cosine fourier features
-    #Input assumption: signal = x % periods
-    #Goal: Recover x in the range [x_min, x_max]
-    #It can tolerate some noise in the signal, but a little less noise is a lot better
-    #This function DOES NOT preserve gradient! It's extremely discrete by nature
-    #TODO: Take less VRAM!!! The vram shouldn't scale with num_samples
-    #Also, in the future, it would be nice to do something smarter than spamming samplzes lol
-    #Based on: https://www.desmos.com/calculator/dnp0zfxqy6
-    #EXAMPLE:
-    #    #This is the same example as on the above desmos link
-    #    periods = torch.tensor([.1984,-.528,.723,-.9845,.0852,-.0684])
-    #    X=torch.linspace(0,1,25)
-    #    signal=X[None]%periods[:,None]
-    #    X_pred=argmin_total_modulo_1d(signal,periods,num_samples=100)
-    #    error=X-X_pred
-    #    ans=error
-
-    assert len(periods.shape)==1, 'periods should be a vector'
-    assert len(signal)==len(periods)
-    assert signal.device==periods.device
-    
-    device = signal.device
-
-    x_samples = torch.linspace(x_min, x_max, num_samples)
-    
-    min_error = torch.ones (signal.shape[1:]).to(device)*9999
-    best_x    = torch.zeros(signal.shape[1:]).to(device) # These initial values shouldn't matter
-
-    for x in x_samples: 
-        pred_signal = x % periods
-        pred_signal = pred_signal[:,None]
-        assert pred_signal.shape == periods.shape + (1,)
-        
-        error = (pred_signal - signal) ** 2
-        error = error.sum(0)
-
-        best_x   [error < min_error] = x
-        min_error=torch.minimum(min_error,error)
-
-    output=best_x
-
-    assert output.shape==signal.shape[1:]
-    return output
-
-
-def argmin_total_modulo_2d(signal, freqs, num_samples:int=None):
-    #Like argmin_total_modulo, but takes in 2d periods and takes num_samples times longer to compute
-    #    (This is because instead of a line search, we have to do a grid search =(  )
-    print("CHEESE")
-    with torch.no_grad():
-        
-        if num_samples is None:
-            num_samples=10
-
-        assert num_samples>=2 #It should probably be much larger than 2, like 100
-
-        assert len(signal.shape)==3
-        assert len(freqs .shape)==2
-
-        num_features, height, width = signal.shape
-        assert freqs.shape==(2, num_features)
-
-        assert signal.device==freqs.device
-        device = signal.device
-
-        x_freqs, y_freqs = freqs
-        assert x_freqs.shape == y_freqs.shape == (num_features,)
-
-        x_samples = torch.linspace(0, 1, num_samples)
-        y_samples = torch.linspace(0, 1, num_samples)
-
-        # best_x's and best_y's initial values don't matter
-        best_x    = torch.zeros(height,width).to(device)
-        best_y    = torch.zeros(height,width).to(device)
-        min_error = torch.ones (height,width).to(device)*9999
-
-        for x in x_samples:
-            for y in y_samples:
-                pred_signal = (x*x_freqs + y*y_freqs)%1
-                pred_signal = pred_signal[:,None,None]
-                assert pred_signal.shape == (num_features, 1, 1)
-
-                thing=((freqs**2).sum(0))[:,None,None]
-                # print(thing.shape,signal.shape,height,width,num_features)
-                error = (pred_signal - signal) ** 2 / thing**2
-                assert error.shape==signal.shape==(num_features, height, width), error.shape
-
-                error = error.sum(0)
-                assert error.shape==(height, width)
-
-                best_x[error < min_error] = x
-                best_y[error < min_error] = y
-                min_error=torch.minimum(min_error,error)
-
-        output=torch.stack((best_x,best_y))
-
-        assert output.shape==(2, height, width)
-        return output
-
-
 class GaussianFourierFeatureTransform(nn.Module):
     """
     Original authors: https://github.com/ndahlquist/pytorch-fourier-feature-networks
@@ -212,13 +108,7 @@ class GaussianFourierFeatureTransform(nn.Module):
             
             return output
             
-        
-        
-        
-        
-        
-    
-    
+
 def get_uv_grid(height:int, width:int, batch_size:int=1)->torch.Tensor:
     #Returns a torch cpu tensor of shape (batch_size,2,height,width)
     #Note: batch_size can probably be removed from this function after refactoring this file. It's always 1 in all usages.
