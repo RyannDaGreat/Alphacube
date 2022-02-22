@@ -14,7 +14,8 @@ import rp
 ######## HELPER FUNCTIONS ########
 ##################################
 
-def argmin_total_modulo(signal, periods, x_min=0, x_max=1, num_samples=1000):
+def argmin_total_modulo_1d(signal, periods, x_min=0, x_max=1, num_samples=1000):
+    #This function is a simpler version of argmin_total_modulo_2d, for explanatory purposes
     #This function is used to help recover UV values from their random, possibly noisy fourier features
     #The maximum accuracy of the output UV values is 1/num_samples (assuming UV values are in the range [0,1])
     #The "Signal" input is the recovered angle from the sine/cosine fourier features
@@ -30,7 +31,7 @@ def argmin_total_modulo(signal, periods, x_min=0, x_max=1, num_samples=1000):
     #    periods = torch.tensor([.1984,-.528,.723,-.9845,.0852,-.0684])
     #    X=torch.linspace(0,1,25)
     #    signal=X[None]%periods[:,None]
-    #    X_pred=argmin_total_modulo(signal,periods,num_samples=100)
+    #    X_pred=argmin_total_modulo_1d(signal,periods,num_samples=100)
     #    error=X-X_pred
     #    ans=error
 
@@ -45,7 +46,7 @@ def argmin_total_modulo(signal, periods, x_min=0, x_max=1, num_samples=1000):
     min_error = torch.ones (signal.shape[1:]).to(device)*9999
     best_x    = torch.zeros(signal.shape[1:]).to(device) # These initial values shouldn't matter
 
-    for x in x_samples:
+    for x in x_samples: 
         pred_signal = x % periods
         pred_signal = pred_signal[:,None]
         assert pred_signal.shape == periods.shape + (1,)
@@ -60,6 +61,61 @@ def argmin_total_modulo(signal, periods, x_min=0, x_max=1, num_samples=1000):
 
     assert output.shape==signal.shape[1:]
     return output
+
+
+def argmin_total_modulo_2d(signal, freqs, num_samples:int=None):
+    #Like argmin_total_modulo, but takes in 2d periods and takes num_samples times longer to compute
+    #    (This is because instead of a line search, we have to do a grid search =(  )
+    print("CHEESE")
+    with torch.no_grad():
+        
+        if num_samples is None:
+            num_samples=10
+
+        assert num_samples>=2 #It should probably be much larger than 2, like 100
+
+        assert len(signal.shape)==3
+        assert len(freqs .shape)==2
+
+        num_features, height, width = signal.shape
+        assert freqs.shape==(2, num_features)
+
+        assert signal.device==freqs.device
+        device = signal.device
+
+        x_freqs, y_freqs = freqs
+        assert x_freqs.shape == y_freqs.shape == (num_features,)
+
+        x_samples = torch.linspace(0, 1, num_samples)
+        y_samples = torch.linspace(0, 1, num_samples)
+
+        # best_x's and best_y's initial values don't matter
+        best_x    = torch.zeros(height,width).to(device)
+        best_y    = torch.zeros(height,width).to(device)
+        min_error = torch.ones (height,width).to(device)*9999
+
+        for x in x_samples:
+            for y in y_samples:
+                pred_signal = (x*x_freqs + y*y_freqs)%1
+                pred_signal = pred_signal[:,None,None]
+                assert pred_signal.shape == (num_features, 1, 1)
+
+                thing=((freqs**2).sum(0))[:,None,None]
+                # print(thing.shape,signal.shape,height,width,num_features)
+                error = (pred_signal - signal) ** 2 / thing**2
+                assert error.shape==signal.shape==(num_features, height, width), error.shape
+
+                error = error.sum(0)
+                assert error.shape==(height, width)
+
+                best_x[error < min_error] = x
+                best_y[error < min_error] = y
+                min_error=torch.minimum(min_error,error)
+
+        output=torch.stack((best_x,best_y))
+
+        assert output.shape==(2, height, width)
+        return output
 
 
 class GaussianFourierFeatureTransform(nn.Module):
@@ -113,13 +169,54 @@ class GaussianFourierFeatureTransform(nn.Module):
         # From [B, H, W, F] to [B, F, H, W 
         x = x.permute(0, 3, 1, 2)
 
-        x = 2 * np.pi * x
+        x = 2 * torch.pi * x
         
         output = torch.cat([torch.sin(x), torch.cos(x)], dim=1)
         
         assert output.shape==(batch_size, 2*self.num_features, height, width)
         
-        return output        
+        return output       
+    
+    def inverse(self, feature_maps, num_samples:int=None):
+        assert self.num_channels==2, "Sorry, this function only supports two-dimensional coordinates right now"
+
+        with torch.no_grad():
+        
+            assert len(feature_maps.shape) == 4
+            batch_size, twice_num_features, height, width = feature_maps.shape
+            assert twice_num_features==2*self.num_features
+            num_features = self.num_features
+
+            output = []
+
+            for feature_map in feature_maps:
+                assert feature_map.shape==(twice_num_features,height,width)
+                sines   = feature_map[:num_features]
+                cosines = feature_map[num_features:]
+                angles  = torch.atan2(sines, cosines)
+                assert sines.shape == cosines.shape == angles.shape == (num_features, height, width)
+
+                signal = (angles + torch.pi) / (2 * torch.pi) #Convert range [-π, π] to [0, 1]
+                
+                rp.icecream.ic(signal.min(),signal.max())
+                
+                predicted_uv = argmin_total_modulo_2d(signal, self.freqs, num_samples)
+                
+                assert predicted_uv.shape == (2, height, width)
+
+                output.append(predicted_uv)
+
+            output = torch.stack(output)
+            
+            assert output.shape == (batch_size, 2, height, width)
+            
+            return output
+            
+        
+        
+        
+        
+        
     
     
 def get_uv_grid(height:int, width:int, batch_size:int=1)->torch.Tensor:
