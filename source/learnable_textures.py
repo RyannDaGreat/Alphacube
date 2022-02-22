@@ -47,20 +47,20 @@ class GaussianFourierFeatureTransform(nn.Module):
     def __call__(self, x):
         assert x.dim() == 4, 'Expected 4D input (got {}D input)'.format(x.dim())
 
-        batch_size, num_channels, width, height = x.shape
+        batch_size, num_channels, height, width = x.shape
 
         assert num_channels == self.num_channels,\
             "Expected input to have {} channels (got {} channels)".format(self.num_channels, num_channels)
 
         # Make shape compatible for matmul with B.
-        # From [B, C, W, H] to [(B*W*H), C].
-        x = x.permute(0, 2, 3, 1).reshape(batch_size * width * height, num_channels)
+        # From [B, C, H, W] to [(B*H*W), C].
+        x = x.permute(0, 2, 3, 1).reshape(batch_size * height * width, num_channels)
 
         x = x @ self.B
 
-        # From [(B*W*H), C] to [B, W, H, C]
-        x = x.view(batch_size, width, height, self.num_features)
-        # From [B, W, H, C] to [B, C, W, H]
+        # From [(B*H*W), C] to [B, H, W, C]
+        x = x.view(batch_size, height, width, self.num_features)
+        # From [B, H, W, C] to [B, C, H, W]
         x = x.permute(0, 3, 1, 2)
 
         x = 2 * np.pi * x
