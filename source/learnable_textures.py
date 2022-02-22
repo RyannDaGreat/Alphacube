@@ -140,16 +140,14 @@ class LearnableImageMLP(LearnableImage):
                  width       :int     , # Width of the learnable images
                  num_channels:int=3   , # Number of channels in the images
                  hidden_dim  :int=256 , # Number of dimensions per hidden layer of the MLP
-                 device      :int=None, # Please set this correctly if you want GPU
                 ):
         
         super().__init__(height,width,num_channels)
         
         self.hidden_dim  =hidden_dim
-        self.device      =device or 'cuda' if torch.cuda.is_available() else 'cpu'
         
         # The following Tensor is NOT a parameter, and is not changed while optimizing this class
-        self.uv_grid=get_uv_grid(height,width,batch_size=1).to(self.device)
+        self.uv_grid=nn.Parameter(get_uv_grid(height,width,batch_size=1), requires_grad=False)
         
         H=hidden_dim    # Number of hidden features. These 1x1 convolutions act as a per-pixel MLP
         C=num_channels  # Shorter variable names let us align the code better
@@ -159,7 +157,7 @@ class LearnableImageMLP(LearnableImage):
                 nn.Conv2d(H, H, kernel_size=1), nn.ReLU(), nn.BatchNorm2d(H),
                 nn.Conv2d(H, C, kernel_size=1),
                 nn.Sigmoid(),
-            ).to(self.device)
+            )
             
     def forward(self):
         output = self.model(self.uv_grid).squeeze(0)
@@ -177,7 +175,6 @@ class LearnableImageFourier(LearnableImage):
                  hidden_dim  :int=256 , # Number of dimensions per hidden layer of the MLP
                  num_features:int=128 , # Number of fourier features per coordinate
                  scale       :int=10  , # Magnitude of the initial feature noise
-                 device      :str=None, # Please set this correctly if you want GPU
                 ):
         #An image paramterized by a fourier features fed into an MLP
         #The possible output range of these images is between 0 and 1
@@ -188,11 +185,10 @@ class LearnableImageFourier(LearnableImage):
         self.hidden_dim  =hidden_dim
         self.num_features=num_features
         self.scale       =scale
-        self.device      =device or 'cuda' if torch.cuda.is_available() else 'cpu'
         
         # The following objects do NOT have parameters, and are not changed while optimizing this class
-        self.uv_grid =get_uv_grid(height,width,batch_size=1).to(self.device)
-        self.feature_extractor=GaussianFourierFeatureTransform(2, num_features, scale).to(self.device)
+        self.uv_grid=nn.Parameter(get_uv_grid(height,width,batch_size=1), requires_grad=False)
+        self.feature_extractor=GaussianFourierFeatureTransform(2, num_features, scale)
         self.features=nn.Parameter(self.feature_extractor(self.uv_grid), requires_grad=False) # pre-compute this if we're regressing on images
         
         H=hidden_dim # Number of hidden features. These 1x1 convolutions act as a per-pixel MLP
@@ -204,7 +200,7 @@ class LearnableImageFourier(LearnableImage):
                 nn.Conv2d(H, H, kernel_size=1), nn.ReLU(), nn.BatchNorm2d(H),
                 nn.Conv2d(H, C, kernel_size=1),
                 nn.Sigmoid(),
-            ).to(self.device)
+            )
     
     #def project(self,uv_maps):
     #    #TODO: Check if this function works well...
@@ -292,14 +288,12 @@ class LearnableTexturePackMLP(LearnableTexturePack):
                  width       :int=256 ,
                  num_channels:int=3   ,
                  hidden_dim  :int=256 ,
-                 device      :str=None,
                  num_textures:int=1   ):
         
         get_learnable_image = lambda: LearnableImageMLP(height      ,
                                                         width       ,
                                                         num_channels,
-                                                        hidden_dim  ,
-                                                        device      )
+                                                        hidden_dim  )
         
         super().__init__(height             ,
                          width              ,
@@ -308,7 +302,6 @@ class LearnableTexturePackMLP(LearnableTexturePack):
                          get_learnable_image)
         
         self.hidden_dim  =hidden_dim
-        self.device      =device              
         
         
 class LearnableTexturePackFourier(LearnableTexturePack):
@@ -319,7 +312,6 @@ class LearnableTexturePackFourier(LearnableTexturePack):
                  hidden_dim  :int=256 ,
                  num_features:int=128 ,
                  scale       :int=10  ,
-                 device      :str=None,
                  num_textures:int=1   ):
         
         get_learnable_image = lambda: LearnableImageFourier(height      ,
@@ -327,8 +319,7 @@ class LearnableTexturePackFourier(LearnableTexturePack):
                                                             num_channels,
                                                             hidden_dim  ,
                                                             num_features,
-                                                            scale       ,
-                                                            device      )
+                                                            scale       )
         
         super().__init__(height             ,
                          width              ,
@@ -339,4 +330,3 @@ class LearnableTexturePackFourier(LearnableTexturePack):
         self.hidden_dim  =hidden_dim  
         self.num_features=num_features
         self.scale       =scale       
-        self.device      =device      
