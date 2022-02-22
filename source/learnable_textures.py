@@ -59,7 +59,7 @@ class GaussianFourierFeatureTransform:
         return torch.cat([torch.sin(x), torch.cos(x)], dim=1)
     
     
-def get_xy_grid(height:int, width:int, batch_size:int=1)->torch.Tensor:
+def get_uv_grid(height:int, width:int, batch_size:int=1)->torch.Tensor:
     #Returns a torch cpu tensor of shape (batch_size,2,height,width)
     #Note: batch_size can probably be removed from this function after refactoring this file. It's always 1 in all usages.
     #The second dimension is (x,y) coordinates, which go from [0 to 1) from edge to edge
@@ -70,13 +70,13 @@ def get_xy_grid(height:int, width:int, batch_size:int=1)->torch.Tensor:
     y_coords = np.linspace(0, 1, height, endpoint=False)
     x_coords = np.linspace(0, 1, width , endpoint=False)
     
-    xy_grid = np.stack(np.meshgrid(y_coords, x_coords), -1)
-    xy_grid = torch.tensor(xy_grid).unsqueeze(0).permute(0, 3, 1, 2).float().contiguous()
-    xy_grid = xy_grid.repeat(batch_size,1,1,1)
+    uv_grid = np.stack(np.meshgrid(y_coords, x_coords), -1)
+    uv_grid = torch.tensor(uv_grid).unsqueeze(0).permute(0, 3, 1, 2).float().contiguous()
+    uv_grid = uv_grid.repeat(batch_size,1,1,1)
     
-    assert tuple(xy_grid.shape)==(batch_size,2,height,width)
+    assert tuple(uv_grid.shape)==(batch_size,2,height,width)
     
-    return xy_grid
+    return uv_grid
 
 
 ##################################
@@ -141,7 +141,7 @@ class LearnableImageMLP(LearnableImage):
         self.device      =device or 'cuda' if torch.cuda.is_available() else 'cpu'
         
         # The following Tensor is NOT a parameter, and is not changed while optimizing this class
-        self.xy_grid=get_xy_grid(height,width,batch_size=1).to(self.device)
+        self.uv_grid=get_uv_grid(height,width,batch_size=1).to(self.device)
         
         H=hidden_dim    # Number of hidden features. These 1x1 convolutions act as a per-pixel MLP
         C=num_channels  # Shorter variable names let us align the code better
@@ -154,7 +154,7 @@ class LearnableImageMLP(LearnableImage):
             ).to(self.device)
             
     def forward(self):
-        output = self.model(self.xy_grid).squeeze(0)
+        output = self.model(self.uv_grid).squeeze(0)
         
         assert output.shape==(self.num_channels, self.height, self.width)
         
@@ -183,9 +183,9 @@ class LearnableImageFourier(LearnableImage):
         self.device      =device or 'cuda' if torch.cuda.is_available() else 'cpu'
         
         # The following objects do NOT have parameters, and are not changed while optimizing this class
-        self.xy_grid =get_xy_grid(height,width,batch_size=1).to(device)
+        self.uv_grid =get_uv_grid(height,width,batch_size=1).to(device)
         self.feature_extractor=GaussianFourierFeatureTransform(2, mapping_size, scale)
-        self.features=nn.Parameter(self.feature_extractor(self.xy_grid).to(self.device), requires_grad=False) # pre-compute this if we're regressing on images
+        self.features=nn.Parameter(self.feature_extractor(self.uv_grid).to(self.device), requires_grad=False) # pre-compute this if we're regressing on images
         
         H=hidden_dim # Number of hidden features. These 1x1 convolutions act as a per-pixel MLP
         C=num_channels  # Shorter variable names let us align the code better
