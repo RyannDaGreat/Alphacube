@@ -103,11 +103,12 @@ class GaussianFourierFeatureTransform(nn.Module):
         # From [B, C, H, W] to [(B*H*W), C].
         x = x.permute(0, 2, 3, 1).reshape(batch_size * height * width, num_channels)
 
+        # [(B*H*W), C] x [C, F] = [(B*H*W), F]
         x = x @ self.B
 
-        # From [(B*H*W), C] to [B, H, W, C]
+        # From [(B*H*W), F] to [B, H, W, F]
         x = x.view(batch_size, height, width, self.num_features)
-        # From [B, H, W, C] to [B, C, H, W 
+        # From [B, H, W, F] to [B, F, H, W 
         x = x.permute(0, 3, 1, 2)
 
         x = 2 * np.pi * x
