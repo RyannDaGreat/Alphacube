@@ -1,5 +1,41 @@
+VERY IMPORTANT TEST: ROBUSTNESS
+    What if the camera moves? What if the lighting changes?
+    What if we want a first person robot to push a block into a goal?
+NEW TESTS:
+    Robot jetson bot.
+    We can do Jinghuan's experiment (multiview) with this! Can we try that?
+
+
+Read other papers to get ideas to enhance this....
+    How will we give hints for object textures in a mobile setting?
+
+GET THIS RUNNING WITH UNITY OR PYBULLET!!!
+
+Try reconstructing the individual fourier channels instead of reconstructing UV. 
+
+Can we find a way to quickly synthsize new latent textures via fibbing?
+	TODO: implement fibbing
+
+Make a more efficient learnable image that also supports higher reoslution by making a projector function, and only analyzing the pixel coordinates that need to be analyzed. This will let us use more textures at potentially higher resolutions (or even infinite) and will allow differentiable textures in the u/v directions
+
 ADD INTERPOLATION TO PROJECTOR! It needs to be differentiable if we want to put loss on UV textures etc.
     THOUGH....these gradients might not be excellent........maybe make the recovery resolution small? lol...idk...
+    We probably want to do this on the simulated ones especially because we have ground truth labels...how would we differentiate the labels???
+        Recovered UVL:
+            Labels turned into one-hot-probabilities, then a weighted texture of the learned textures based on those probabilities...
+            ...with an additional loss that tries to make those probabilities as close to one-hot as possible? (Or just rely on the GAN for that...)
+        
+
+
+POSSIBLE NEXT VERSION:
+    Also learn normal maps (add onto global normals, rotated appropriately)
+    Use those normals: 
+        Either feed them in as just a few more channels or...
+        Have a pipeline that takes albedo and normals and outputs renderings:
+            Has a sky-dome that lights the object (by multiplying the albedo)
+            Might also add reflections...not 100% sure how that would work though...
+            Reasons: it could extract normal maps, recover lighting (make training new objects easier perhaps)
+            ***All of this would allow us to relight the scene***
 
 Don't name the Sunkist experiment 'config'!
 
