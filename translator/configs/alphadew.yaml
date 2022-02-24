@@ -40,12 +40,12 @@ recon_x_cyc_w: 10             # weight of explicit style augmented cycle consist
 gen:
   dim: 64                     # number of filters in the bottommost layer
   mlp_dim: 256                # number of filters in MLP
-  style_dim: 8                # length of style code
+  # style_dim: 8                # length of style code
   activ: relu                 # activation function [relu/lrelu/prelu/selu/tanh]
   n_downsample: 2             # number of downsampling layers in content encoder
   n_res: 4                    # number of residual blocks in content encoder/decoder
   pad_type: reflect           # padding type [zero/reflect]
-  num_classes: 8              # number of classes in segmentation map
+  # num_classes: 8              # number of classes in segmentation map
 dis:
   dim: 64                     # number of filters in the bottommost layer
   norm: none                  # normalization layer [none/bn/in/ln]

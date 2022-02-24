@@ -67,7 +67,7 @@ class MUNIT_Trainer(nn.Module):
         # self.instancenorm = nn.InstanceNorm2d(512, affine=False)
 
         # self.style_dim   = hyperparameters['gen']['style_dim'  ]
-        self.num_classes = hyperparameters['gen']['num_classes']
+        # self.num_classes = hyperparameters['gen']['num_classes']
 
         # fix the noise used in sampling
         # display_size = int(hyperparameters['display_size'])
