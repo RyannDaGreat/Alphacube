@@ -6,10 +6,21 @@ NEW TESTS:
     We can do Jinghuan's experiment (multiview) with this! Can we try that?
 
 
+THINGS TO FIX FOR CLUSTER:
+    Better config handling
+        Want to choose GPU
+    Want image server etc
+    Want all my settings (docker??)
+    ** Figure out why tags aren't working!!!
+    ** Also a little log here: I got the algorithm running on the server! (WS1) It needs a lot of work....but.......progress!!! Proud of it lol
+    Policies:
+        Only one branch: master. Stash changes when you need to, do almost all changes on Glass (expect to force-push a lot)
+
 Read other papers to get ideas to enhance this....
     How will we give hints for object textures in a mobile setting?
 
 GET THIS RUNNING WITH UNITY OR PYBULLET!!!
+    Or the environment jinghuan suggested...
 
 Try reconstructing the individual fourier channels instead of reconstructing UV. 
 
