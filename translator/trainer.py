@@ -28,6 +28,7 @@ texture_loss_weight = 20
 view_consistency_version = 'std'
 texture_multiplier = 1
 texture_reality_loss_weight = 2 #Gotta rename this; it controls how much the texture and translations have to match
+recon_texture_reality_loss_weight = 2 #Gotta rename this; its like texture_reality_loss_weight but for photo-to-sim
 
 class MUNIT_Trainer(nn.Module):
     def __init__(self, hyperparameters, trainable=True):
@@ -257,8 +258,12 @@ class MUNIT_Trainer(nn.Module):
         
         texture_reality_loss =(      (x_ab-x_a[:,:3])**2).mean()    *texture_reality_loss_weight
         texture_reality_loss+=-msssim(x_ab,x_a[:,:3],normalize=True)*texture_reality_loss_weight #normalize=True because without it we get tons of NaN's
+            
+        recon_texture_reality_loss =(      (x_b-x_ba[:,:3])**2).mean()    *recon_texture_reality_loss_weight
+        recon_texture_reality_loss+=-msssim(x_b,x_ba[:,:3],normalize=True)*recon_texture_reality_loss_weight #normalize=True because without it we get tons of NaN's
 
         loss_gen_total = loss_gen_total + texture_reality_loss
+        loss_gen_total = loss_gen_total + recon_texture_reality_loss
 
         loss_gen_total.backward()
 

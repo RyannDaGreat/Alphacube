@@ -60,18 +60,18 @@ input_dim_a: 6                    # number of image channels [1/3]
 input_dim_b: 3                    # number of image channels [1/3]
 num_workers: 8                    # number of data loading threads
 
-crop_image_height: 256            # random crop image of this height
-crop_image_width: 256             # random crop image of this width
+crop_image_height: 128            # random crop image of this height
+crop_image_width: 128             # random crop image of this width
 # Data options used during translation (after models have been trained) by translate.py.
 # If these are not set, will fall back to use the data options above.
-crop_image_height_translation: 256                      # random crop image of this height
-crop_image_width_translation: 256                       # random crop image of this width
+crop_image_height_translation: 128                      # random crop image of this height
+crop_image_width_translation: 128                       # random crop image of this width
 
 #GOOD RESOLUTION STAGES TO TRAIN BY:
-new_size_min_a: 300               # first (randomly) resize the shortest image side to this size
-new_size_max_a: 300               # first (randomly) resize the shortest image side to this size
-new_size_min_b: 300               # first (randomly) resize the shortest image side to this size
-new_size_max_b: 300               # first (randomly) resize the shortest image side to this size
+new_size_min_a: 128               # first (randomly) resize the shortest image side to this size
+new_size_max_a: 128               # first (randomly) resize the shortest image side to this size
+new_size_min_b: 128               # first (randomly) resize the shortest image side to this size
+new_size_max_b: 128               # first (randomly) resize the shortest image side to this size
 #   64, 128, 256, 300, 320, 450
 #TIMING PER ITER:
 #     64: μ=0.1981049444,  σ=0.0281622
