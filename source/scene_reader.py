@@ -1,6 +1,38 @@
 import torch
 
 
+def replace_values(tensor,old_values,new_values):
+    #TODO: Make this work with colors too! And also changing the shape of tensors...so we can replace ints with colors etc
+    #
+    # EXAMPLE:
+    #     >>> tensor=torch.tensor([0,1,2,3,4,3,2,1,0])
+    #         old_values=torch.tensor([1,2,3,9])
+    #         new_values=torch.tensor([5,3,1,8])
+    #         ans=replace_values(tensor,old_values,new_values)
+    #    ans = tensor([0, 5, 3, 1, 4, 1, 3, 5, 0])
+    #
+    assert isinstance(tensor    ,torch.Tensor)
+    assert isinstance(old_values,torch.Tensor)
+    assert isinstance(new_values,torch.Tensor)
+    assert len(old_values)==len(new_values)
+    assert (old_values>=0).all(), 'Currently this function requires all values to be non-negative'
+    assert (new_values>=0).all(), 'Currently this function requires all values to be non-negative'
+    assert len(old_values.shape)==1, 'Currently this function only works element-wise'
+    assert len(new_values.shape)==1, 'Currently this function only works element-wise'
+    
+    new_tensor = tensor.clone()
+
+    for old_value in old_values:
+        new_tensor[new_tensor == old_value] = -old_value
+    
+    for old_value, new_value in zip(old_values, new_values):
+        new_tensor[new_tensor == -old_value] = new_value
+        
+    assert new_tensor.shape == tensor.shape, 'This assertion holds because this function currently only operates element-wise'
+
+    return new_tensor
+    
+
 def condense_values(tensor, values):
     #Mutates the given tensor and returns it
     #   - tensor: can be either torch.Tensor or np.ndarray
