@@ -30,6 +30,24 @@ texture_multiplier = 1
 texture_reality_loss_weight = 2 #Gotta rename this; it controls how much the texture and translations have to match
 recon_texture_reality_loss_weight = 2 #Gotta rename this; its like texture_reality_loss_weight but for photo-to-sim
 
+#Use the following two arrays to permute label values...
+old_labels=[0,1,2,3,4,5]
+# new_labels=[2,0,3,1,4,5]
+new_labels=[1,0,2,3,4,5]
+new_labels=[1,0,3,2,4,5]
+# new_labels=[2,0,3,1,4,5]
+# old_labels=[]
+# new_labels=[]
+# 0 Alphabet: 0
+# 1 Rubiks: 50
+# 2 Garlic: 100
+# 3 Apple: 150
+# 4 Soda: 200
+# 5 Table: 255
+
+old_labels=torch.tensor(old_labels)
+new_labels=torch.tensor(new_labels)
+
 class MUNIT_Trainer(nn.Module):
     def __init__(self, hyperparameters, trainable=True):
 
@@ -107,6 +125,8 @@ class MUNIT_Trainer(nn.Module):
         scene_uvs, scene_labels = scene_reader.extract_scene_uvs_and_scene_labels(scene_images = x_a         ,
                                                                                   label_values = label_values)
 
+        scene_labels = scene_reader.replace_values(scene_labels, old_labels, new_labels)
+
         texture_pack=self.texture_pack()
 
         scene_projections = projector.project_textures(scene_uvs, scene_labels, texture_pack)
@@ -115,6 +135,9 @@ class MUNIT_Trainer(nn.Module):
         # x_a = x_a * 2 - 1 #Convert from 0,1 range to -1,1 range
         # x_a = torch.stack((x_a,scene_projections), dim=1) #Add projected textures
         # that involves creating more visualizations for all 6 channels and textures
+
+        x_a_blue = scene_reader.replace_values(scene_labels, torch.tensor(list(range(len(label_values)))), torch.tensor(label_values) )
+        x_a[:, 2] = x_a_blue / 255
 
         #SIMPLE:
         x_a=x_a*2-1
