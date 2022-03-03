@@ -164,7 +164,6 @@ class MUNIT_Trainer(nn.Module):
     def forward(self, x_a, x_b):
         x_a, _, _ = self.project_texture_pack(x_a)
 
-        self.eval()
         #s_a = Variable(self.s_a)
         # s_b = Variable(self.s_b)
 
@@ -176,13 +175,14 @@ class MUNIT_Trainer(nn.Module):
         x_ab = self.gen_b.decode(c_a)
         # x_ab = self.gen_b.decode(c_a, s_b)
 
-        self.train()
         return x_ab, x_ba
 
 
     def gen_update(self, x_a, x_b, hyperparameters, useLabelLoss=False):
 
-        assert self.trainable, 'This MUNIT_Trainer is not trainable, and does not have optimizers or discriminators etc'
+        assert self.trainable, 'This MUNIT_Trainer is not trainable, and does not have optimizers or discriminators etc (to save memory)'
+
+        self.train()
 
         ###########################
         ####### RYAN'S CODE #######
@@ -308,6 +308,8 @@ class MUNIT_Trainer(nn.Module):
 
     def sample(self, x_a, x_b, with_grad=False):
 
+        self.eval()
+
         if not with_grad:
             with torch.no_grad():
                 return self.sample(x_a, x_b, with_grad=True)
@@ -316,7 +318,6 @@ class MUNIT_Trainer(nn.Module):
 
         x_a, _, _ = self.project_texture_pack(x_a)
 
-        self.eval()
         # s_b = self.s_b
         x_a_recon, x_b_recon, x_ba, x_bab, x_ab, x_aba, x_ab_rand = [], [], [], [], [], [], []
         for i in range(x_a.size(0)):
@@ -370,8 +371,6 @@ class MUNIT_Trainer(nn.Module):
         x_b_recon =(torch.cat(x_b_recon)+1)/2
         x_ab_rand =(torch.cat(x_ab_rand)+1)/2
 
-        self.train()
-
         return x_a_original, x_a[:,:3], x_a_recon[:,:3], x_a_recon[:,3:], x_ab, x_aba[:,:3], x_aba[:,3:], \
                x_b, x_b_recon, x_ba[:,:3], x_ba[:,3:], x_bab
         # return x_a_original, x_a, x_a_recon, x_ab, x_ab_rand, x_aba, x_b, x_b_recon, x_ba, x_bab #We removed all randomness, so x_ab_rand==x_ab exactly (I tested it - it's true. They're identical and therefore redundant)
@@ -381,13 +380,14 @@ class MUNIT_Trainer(nn.Module):
         #If you ever want to modify the functionality of this function, make sure you modify it in self.sample() too
         #TODO: Remove this redundancy lol
 
+        self.eval()
+
         if not with_grad:
             with torch.no_grad():
                 return self.sample_a2b(x_a, with_grad=True)
 
         x_a, _, _ = self.project_texture_pack(x_a)
 
-        self.eval()
         x_ab = []
 
         for i in range(x_a.size(0)):
@@ -401,18 +401,17 @@ class MUNIT_Trainer(nn.Module):
 
         x_ab=(torch.cat(x_ab)+1)/2
 
-        self.train()
-
         return x_ab
 
     def sample_b2a(self, x_b, with_grad=False):
         #This function is almost identical to sample_a2b
 
+        self.eval()
+
         if not with_grad:
             with torch.no_grad():
                 return self.sample_b2a(x_b, with_grad=True)
 
-        self.eval()
         x_ba = []
 
         for i in range(x_b.size(0)):
@@ -426,13 +425,13 @@ class MUNIT_Trainer(nn.Module):
 
         x_ba=(torch.cat(x_ba)+1)/2
 
-        self.train()
-
         return x_ba
 
     def dis_update(self, x_a, x_b, hyperparameters):
 
         assert self.trainable, 'This MUNIT_Trainer is not trainable, and does not have optimizers or discriminators etc'
+
+        self.train()
 
         x_a, _, _ = self.project_texture_pack(x_a)
 

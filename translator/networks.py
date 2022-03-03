@@ -169,6 +169,7 @@ class StylelessGen(nn.Module):
         n_res = params['n_res']
         activ = params['activ']
         pad_type = params['pad_type']
+        self.image_noise_level = .1 #TODO: Make this a parameter
 
         # content encoder
         self.enc_content = ContentEncoder(n_downsample, n_res, input_dim, dim, 'in', activ, pad_type=pad_type)
@@ -181,7 +182,10 @@ class StylelessGen(nn.Module):
         return images_recon
 
     def encode(self, images):
-        images = images + torch.randn_like( images )*0.1
+        if self.training:
+            #Add random noise to the input when we're training
+            images = images + torch.randn_like( images ) * self.image_noise_level
+
         # encode an image to its content code
         content = self.enc_content(images)
         return content 
