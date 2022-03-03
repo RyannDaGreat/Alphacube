@@ -73,41 +73,6 @@ class GaussianFourierFeatureTransform(nn.Module):
         
         return output       
     
-    def inverse(self, feature_maps, num_samples:int=None):
-        assert self.num_channels==2, "Sorry, this function only supports two-dimensional coordinates right now"
-
-        with torch.no_grad():
-        
-            assert len(feature_maps.shape) == 4
-            batch_size, twice_num_features, height, width = feature_maps.shape
-            assert twice_num_features==2*self.num_features
-            num_features = self.num_features
-
-            output = []
-
-            for feature_map in feature_maps:
-                assert feature_map.shape==(twice_num_features,height,width)
-                sines   = feature_map[:num_features]
-                cosines = feature_map[num_features:]
-                angles  = torch.atan2(sines, cosines)
-                assert sines.shape == cosines.shape == angles.shape == (num_features, height, width)
-
-                signal = (angles + torch.pi) / (2 * torch.pi) #Convert range [-π, π] to [0, 1]
-                
-                rp.icecream.ic(signal.min(),signal.max())
-                
-                predicted_uv = argmin_total_modulo_2d(signal, self.freqs, num_samples)
-                
-                assert predicted_uv.shape == (2, height, width)
-
-                output.append(predicted_uv)
-
-            output = torch.stack(output)
-            
-            assert output.shape == (batch_size, 2, height, width)
-            
-            return output
-            
 
 def get_uv_grid(height:int, width:int, batch_size:int=1)->torch.Tensor:
     #Returns a torch cpu tensor of shape (batch_size,2,height,width)
