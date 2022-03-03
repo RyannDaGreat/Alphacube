@@ -22,14 +22,14 @@ class MsImageDis(nn.Module):
     # Multi-scale discriminator architecture
     def __init__(self, input_dim, params):
         super(MsImageDis, self).__init__()
-        self.n_layer = params['n_layer']
-        self.gan_type = params['gan_type']
-        self.dim = params['dim']
-        self.norm = params['norm']
-        self.activ = params['activ']
+        self.n_layer    = params['n_layer']
+        self.gan_type   = params['gan_type']
+        self.dim        = params['dim']
+        self.norm       = params['norm']
+        self.activ      = params['activ']
         self.num_scales = params['num_scales']
-        self.pad_type = params['pad_type']
-        self.input_dim = input_dim
+        self.pad_type   = params['pad_type']
+        self.input_dim  = input_dim
         self.downsample = nn.AvgPool2d(3, stride=2, padding=[1, 1], count_include_pad=False)
         self.cnns = nn.ModuleList()
         for _ in range(self.num_scales):
@@ -163,12 +163,12 @@ class StylelessGen(nn.Module):
     # AdaIN auto-encoder architecture
     def __init__(self, input_dim, params):
         super(StylelessGen, self).__init__()
-        dim = params['dim']
-        #style_dim = params['style_dim']
+        dim          = params['dim']
+        #style_dim  = params['style_dim']
         n_downsample = params['n_downsample']
-        n_res = params['n_res']
-        activ = params['activ']
-        pad_type = params['pad_type']
+        n_res        = params['n_res']
+        activ        = params['activ']
+        pad_type     = params['pad_type']
         self.image_noise_level = .1 #TODO: Make this a parameter
 
         # content encoder
