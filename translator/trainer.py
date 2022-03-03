@@ -4,19 +4,16 @@
 Copyright (C) 2017 NVIDIA Corporation.  All rights reserved.
 Licensed under the CC BY-NC-SA 4.0 license (https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode).
 """
-from networks import AdaINGen, MsImageDis, VAEGen, StylelessGen, ResBlockSegmentation
+from networks import MsImageDis
+from networks import StylelessGen
 from utils import weights_init, get_model_list, get_scheduler
-from utils import __write_images as writeImage
-from pytorch_msssim import msssim, ssim
-from torch.autograd import Variable
+from pytorch_msssim import msssim
 
 import os
 import torch
-import random
 import torch.nn as nn
 
 import upper.source.projector          as projector
-import upper.source.unprojector        as unprojector
 import upper.source.scene_reader       as scene_reader
 import upper.source.view_consistency   as view_consistency
 import upper.source.learnable_textures as learnable_textures
