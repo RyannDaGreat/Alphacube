@@ -6,6 +6,9 @@ NEW TESTS:
     We can do Jinghuan's experiment (multiview) with this! Can we try that?
 
 
+QUESTIONS:
+    If we use only recon_texture_reality_loss_weight will it effectively make texture_reality_loss_weight work? (If not it means the latents aren't tangled enough)
+
 THINGS TO FIX FOR CLUSTER:
     Better config handling
         Want to choose GPU
