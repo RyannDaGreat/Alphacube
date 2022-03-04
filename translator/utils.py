@@ -104,7 +104,7 @@ def get_data_loader_folder(input_folder        ,
 
 
 def get_config(config_path):
-    config = rp.load_yaml_file(config_path)
+    config = rp.load_dyaml_file(config_path)
     assert isinstance(config,dict)
     return rp.DictReader(config)
 
