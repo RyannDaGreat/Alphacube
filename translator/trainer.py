@@ -20,21 +20,11 @@ import upper.source.learnable_textures as learnable_textures
 
 import rp
 
-label_values = [0,50,100,150,200,255]
-texture_loss_weight = 20
-view_consistency_version = 'std'
-texture_multiplier = 1
-texture_reality_loss_weight = 2 #Gotta rename this; it controls how much the texture and translations have to match
-recon_texture_reality_loss_weight = 2 #Gotta rename this; its like texture_reality_loss_weight but for photo-to-sim
-
 #Use the following two arrays to permute label values...
-old_labels=[0,1,2,3,4,5]
+# old_labels=[0,1,2,3,4,5]
 # new_labels=[2,0,3,1,4,5]
-new_labels=[1,0,2,3,4,5]
-new_labels=[1,0,3,2,4,5]
-# new_labels=[2,0,3,1,4,5]
-# old_labels=[]
-# new_labels=[]
+old_labels=[]
+new_labels=[]
 # 0 Alphabet: 0
 # 1 Rubiks: 50
 # 2 Garlic: 100
@@ -57,14 +47,14 @@ class MUNIT_Trainer(nn.Module):
             self.trainable=False
 
         hyp=hyperparameters #Shorthand notation
-        self.hyperparameters=hyp
+        self.hyp=hyperparameters
 
         #TODO: Connect the config to change the height, width, num_channels etc of the learnable textures
-        self.texture_pack = learnable_textures.LearnableTexturePackFourier(height=256,width=256,num_textures=len(label_values)) 
+        self.texture_pack = learnable_textures.LearnableTexturePackFourier(height=256,width=256,num_textures=len(hyp.label_values)) 
 
         a_num_channels = hyp.input_dim_a#+self.texture_pack.num_channels
         b_num_channels = hyp.input_dim_b
-        self.view_consistency_loss = view_consistency.ViewConsistencyLoss(recovery_width = 128, recovery_height = 128, version = view_consistency_version)
+        self.view_consistency_loss = view_consistency.ViewConsistencyLoss(recovery_width = 128, recovery_height = 128, version = hyp.view_consistency_version)
 
         print("BATCH SIZE",hyp.batch_size)
         if not hyp.batch_size>1:
@@ -121,8 +111,11 @@ class MUNIT_Trainer(nn.Module):
 
 
     def project_texture_pack(self, x_a):
+
+        hyp=self.hyp
+
         scene_uvs, scene_labels = scene_reader.extract_scene_uvs_and_scene_labels(scene_images = x_a         ,
-                                                                                  label_values = label_values)
+                                                                                  label_values = hyp.label_values)
 
         scene_labels = scene_reader.replace_values(scene_labels, old_labels, new_labels)
 
@@ -135,7 +128,7 @@ class MUNIT_Trainer(nn.Module):
         # x_a = torch.stack((x_a,scene_projections), dim=1) #Add projected textures
         # that involves creating more visualizations for all 6 channels and textures
 
-        x_a_blue = scene_reader.replace_values(scene_labels, torch.tensor(list(range(len(label_values)))), torch.tensor(label_values) )
+        x_a_blue = scene_reader.replace_values(scene_labels, torch.tensor(list(range(len(hyp.label_values)))), torch.tensor(hyp.label_values) )
         x_a[:, 2] = x_a_blue / 255
 
         #SIMPLE:
@@ -150,7 +143,7 @@ class MUNIT_Trainer(nn.Module):
         # x_a[:,:2] = scene_projections[:,:2] #A compromise...I'll force the third channel (blue) to be preserved and the first two channels (R,G) are learnable. I'll add more channels later...but right now I don't have the visualizers for this.
 
         #RESIDUAL:
-        x_a = x_a + (scene_projections-1/2)*2*texture_multiplier#let's try to minimize effort right now...let's just use 3 channels for visualization etc... todo make all 6:
+        x_a = x_a + (scene_projections-1/2)*2*hyp.texture_multiplier#let's try to minimize effort right now...let's just use 3 channels for visualization etc... todo make all 6:
 
         x_a = torch.cat((x_a,content),dim=1)#BCHW
 
@@ -180,7 +173,7 @@ class MUNIT_Trainer(nn.Module):
         return x_ab, x_ba
 
 
-    def gen_update(self, x_a, x_b, hyperparameters, useLabelLoss=False):
+    def gen_update(self, x_a, x_b, hyperparameters):
 
         assert self.trainable, 'This MUNIT_Trainer is not trainable, and does not have optimizers or discriminators etc (to save memory)'
 
@@ -266,25 +259,26 @@ class MUNIT_Trainer(nn.Module):
         # if (loss_view_consistency.isnan() | loss_view_consistency.isinf()).any(): print("view consistency has nan or inf")
 
         #Total loss
-        loss_gen_total  = hyp.gan_w         * loss_gen_adv_a       
-        loss_gen_total += hyp.gan_w         * loss_gen_adv_b       
-        loss_gen_total += hyp.recon_x_w     * loss_gen_recon_x_a   
-        loss_gen_total += hyp.recon_c_w     * loss_gen_recon_c_a   
-        loss_gen_total += hyp.recon_x_w     * loss_gen_recon_x_b   
-        loss_gen_total += hyp.recon_c_w     * loss_gen_recon_c_b   
-        loss_gen_total += hyp.recon_x_cyc_w * loss_gen_cycrecon_x_a
-        loss_gen_total += hyp.recon_x_cyc_w * loss_gen_cycrecon_x_b
-        loss_gen_total += view_consistency_weight       * loss_view_consistency
+        loss_gen_total  = hyp.gan_w                   * loss_gen_adv_a       
+        loss_gen_total += hyp.gan_w                   * loss_gen_adv_b       
+        loss_gen_total += hyp.recon_x_w               * loss_gen_recon_x_a   
+        loss_gen_total += hyp.recon_c_w               * loss_gen_recon_c_a   
+        loss_gen_total += hyp.recon_x_w               * loss_gen_recon_x_b   
+        loss_gen_total += hyp.recon_c_w               * loss_gen_recon_c_b   
+        loss_gen_total += hyp.recon_x_cyc_w           * loss_gen_cycrecon_x_a
+        loss_gen_total += hyp.recon_x_cyc_w           * loss_gen_cycrecon_x_b
+        loss_gen_total += hyp.view_consistency_weight * loss_view_consistency
         # loss_gen_total += hyperparameters.ms_ssim_a_w   * loss_msssim_ab
         # loss_gen_total += hyperparameters.ms_ssim_b_w   * loss_msssim_ba
         # loss_gen_total += hyperparameters.recon_s_w     * loss_gen_recon_s_b
 
         
-        texture_reality_loss =(      (x_ab-x_a[:,:3])**2).mean()    *texture_reality_loss_weight
-        texture_reality_loss+=-msssim(x_ab,x_a[:,:3],normalize=True)*texture_reality_loss_weight #normalize=True because without it we get tons of NaN's
+        #TODO: Replace these losses with self.reconstruction_criterion!  
+        texture_reality_loss       =(      (x_ab-x_a[:,:3])**2).mean()    *hyp.texture_reality_loss_weight
+        texture_reality_loss      +=-msssim(x_ab,x_a[:,:3],normalize=True)*hyp.texture_reality_loss_weight #normalize=True because without it we get tons of NaN's
             
-        recon_texture_reality_loss =(      (x_b-x_ba[:,:3])**2).mean()    *recon_texture_reality_loss_weight
-        recon_texture_reality_loss+=-msssim(x_b,x_ba[:,:3],normalize=True)*recon_texture_reality_loss_weight #normalize=True because without it we get tons of NaN's
+        recon_texture_reality_loss =(      (x_b-x_ba[:,:3])**2).mean()    *hyp.recon_texture_reality_loss_weight
+        recon_texture_reality_loss+=-msssim(x_b,x_ba[:,:3],normalize=True)*hyp.recon_texture_reality_loss_weight #normalize=True because without it we get tons of NaN's
 
         loss_gen_total = loss_gen_total + texture_reality_loss
         loss_gen_total = loss_gen_total + recon_texture_reality_loss
