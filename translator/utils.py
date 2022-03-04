@@ -7,7 +7,6 @@ from torch.optim      import lr_scheduler
 from torch.utils.data import DataLoader
 
 import math
-import numpy as np
 import os
 import time
 import torch
@@ -242,39 +241,40 @@ class Timer:
 ##################################
 ##################################
 
+# import numpy as np
 
-def slerp(val, low, high):
-    """
-    original: Animating Rotation with Quaternion Curves, Ken Shoemake
-    https://arxiv.org/abs/1609.04468
-    Code: https://github.com/soumith/dcgan.torch/issues/14, Tom White
-    """
-    omega = np.arccos(np.dot(low / np.linalg.norm(low), high / np.linalg.norm(high)))
-    so = np.sin(omega)
-    return np.sin((1.0 - val) * omega) / so * low + np.sin(val * omega) / so * high
-
-
-def get_slerp_interp(nb_latents, nb_interp, z_dim):
-    """
-    modified from: PyTorch inference for "Progressive Growing of GANs" with CelebA snapshot
-    https://github.com/ptrblck/prog_gans_pytorch_inference
-    """
-
-    latent_interps = np.empty(shape=(0, z_dim), dtype=np.float32)
-    for _ in range(nb_latents):
-        low = np.random.randn(z_dim)
-        high = np.random.randn(z_dim)  # low + np.random.randn(512) * 0.7
-        interp_vals = np.linspace(0, 1, num=nb_interp)
-        latent_interp = np.array([slerp(v, low, high) for v in interp_vals],
-                                 dtype=np.float32)
-        latent_interps = np.vstack((latent_interps, latent_interp))
-
-    return latent_interps[:, :, np.newaxis, np.newaxis]
+# def slerp(val, low, high):
+#     """
+#     original: Animating Rotation with Quaternion Curves, Ken Shoemake
+#     https://arxiv.org/abs/1609.04468
+#     Code: https://github.com/soumith/dcgan.torch/issues/14, Tom White
+#     """
+#     omega = np.arccos(np.dot(low / np.linalg.norm(low), high / np.linalg.norm(high)))
+#     so = np.sin(omega)
+#     return np.sin((1.0 - val) * omega) / so * low + np.sin(val * omega) / so * high
 
 
-def eformat(f, prec):
-    s = "%.*e"%(prec, f)
-    mantissa, exp = s.split('e')
-    # add 1 to digits as 1 is taken by sign +/-
-    return "%se%d"%(mantissa, int(exp))
+# def get_slerp_interp(nb_latents, nb_interp, z_dim):
+#     """
+#     modified from: PyTorch inference for "Progressive Growing of GANs" with CelebA snapshot
+#     https://github.com/ptrblck/prog_gans_pytorch_inference
+#     """
+#
+#     latent_interps = np.empty(shape=(0, z_dim), dtype=np.float32)
+#     for _ in range(nb_latents):
+#         low = np.random.randn(z_dim)
+#         high = np.random.randn(z_dim)  # low + np.random.randn(512) * 0.7
+#         interp_vals = np.linspace(0, 1, num=nb_interp)
+#         latent_interp = np.array([slerp(v, low, high) for v in interp_vals],
+#                                  dtype=np.float32)
+#         latent_interps = np.vstack((latent_interps, latent_interp))
+#
+#     return latent_interps[:, :, np.newaxis, np.newaxis]
+
+
+# def eformat(f, prec):
+#     s = "%.*e"%(prec, f)
+#     mantissa, exp = s.split('e')
+#     # add 1 to digits as 1 is taken by sign +/-
+#     return "%se%d"%(mantissa, int(exp))
 
