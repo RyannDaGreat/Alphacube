@@ -25,22 +25,22 @@ parser.add_argument('--store_style_images',action='store_true', help="store the 
 
 opts = parser.parse_args()
 conf = get_config(opts.config)
-num_classes = conf["gen"]["num_classes"]
+num_classes = conf.gen.num_classes
 
 # Figure out how large the result images should be:
 if "crop_image_width_translation" in conf:
-    w = conf["crop_image_width_translation"]
+    w = conf.crop_image_width_translation
 else:
-    w = conf["crop_image_width"]
+    w = conf.crop_image_width
 if "crop_image_height_translation" in conf:
-    h = conf["crop_image_height_translation"]
+    h = conf.crop_image_height_translation
 else:
-    h = conf["crop_image_height"]
+    h = conf.crop_image_height
 print("Will output translated images of size {}x{}".format(w,h))
 
-if conf["batch_size"] > 1:
+if conf.batch_size > 1:
     print("Warning: Currently only batch size of 1 is supported during translation.")
-    conf["batch_size"] = 1
+    conf.batch_size = 1
 
 if opts.store_style_images and not opts.style_input_folder:
     print("Warning: 'store_stlye_images' set, but no style_input_folder given. Will use random styles and not use style images.")
@@ -48,7 +48,7 @@ if opts.store_style_images and not opts.style_input_folder:
 torch.manual_seed(opts.seed)
 torch.cuda.manual_seed(opts.seed)
 
-style_dim = conf['gen']['style_dim']
+style_dim = conf.gen.style_dim
 trainer = MUNIT_Trainer(conf)
 state_dict = torch.load(opts.checkpoint)
 trainer.gen_a.load_state_dict(state_dict['a'])
@@ -57,8 +57,8 @@ trainer.cuda()
 trainer.eval()
 
 aug = {}
-aug["new_size_min"] = conf["new_size_min_a"]
-aug["new_size_max"] = conf["new_size_max_a"]
+aug["new_size_min"] = conf.new_size_min_a
+aug["new_size_max"] = conf.new_size_max_a
 aug["output_size"] = (w,h)
 aug["circle_mask"] = False
 aug["rotate"] = False
@@ -67,7 +67,7 @@ for path in opts.input_folder:
     translationData = ImageFolder(path, return_paths=True, augmentation=aug)
     datasets.append( translationData )
 concatDataset = torch.utils.data.ConcatDataset( datasets )
-translationDataLoader = torch.utils.data.DataLoader(dataset=concatDataset, batch_size=conf["batch_size"], shuffle=False, drop_last=True, num_workers=conf["num_workers"])
+translationDataLoader = torch.utils.data.DataLoader(dataset=concatDataset, batch_size=conf.batch_size, shuffle=False, drop_last=True, num_workers=conf.num_workers)
 
 fnt = ImageFont.truetype('Pillow/Tests/fonts/FreeMono.ttf', 40)
 
@@ -81,13 +81,13 @@ if opts.style_input_folder:
     randStyle = False
 
     aug = {}
-    aug["new_size_min"] = conf["new_size_min_b"]
-    aug["new_size_max"] = conf["new_size_max_b"]
+    aug["new_size_min"] = conf.new_size_min_b
+    aug["new_size_max"] = conf.new_size_max_b
     aug["output_size"] = (w,h)
     aug["circle_mask"] = False
     aug["rotate"] = False
     styleData = ImageFolder(opts.style_input_folder, return_paths=False, augmentation=aug)
-    styleDataLoader = torch.utils.data.DataLoader(dataset=styleData, batch_size=conf["batch_size"], shuffle=True, drop_last=True, num_workers=conf["num_workers"])
+    styleDataLoader = torch.utils.data.DataLoader(dataset=styleData, batch_size=conf.batch_size, shuffle=True, drop_last=True, num_workers=conf.num_workers)
     styleIterator = iter(styleDataLoader)
 
 def getRandomStyleImage():
@@ -128,7 +128,7 @@ with torch.no_grad():
         if randStyle:
             #results = []
             for style in range(0,opts.num_styles):
-                s_b = torch.randn(conf["batch_size"], style_dim, 1, 1).cuda()
+                s_b = torch.randn(conf.batch_size, style_dim, 1, 1).cuda()
                 x_ab = trainer.gen_b.decode( c_a, s_b )
                 path = os.path.join(opts.output_folder, seqname, "style_%02d"%style, basename)
                 if not os.path.exists(os.path.dirname(path)):

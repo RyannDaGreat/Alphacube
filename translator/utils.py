@@ -13,7 +13,7 @@ import time
 import torch
 import torch.nn.init as init
 import torchvision.utils as vutils
-import yaml
+import rp
 
 # SUMMARY:
 # get_all_data_loaders      : primary data loader interface (load trainA, testA, trainB, testB)
@@ -40,26 +40,26 @@ def get_all_data_loaders(conf):
 
     #This needs to be modified by Ryan Burgert later on
 
-    batch_size  = conf['batch_size'       ]
-    num_workers = conf['num_workers'      ]
-    height      = conf['crop_image_height']
-    width       = conf['crop_image_width' ]
+    batch_size  = conf.batch_size
+    num_workers = conf.num_workers
+    height      = conf.crop_image_height
+    width       = conf.crop_image_width
 
     if 'data_root' in conf:
         aug = {}
-        aug["new_size_min"] = conf["new_size_min_a"]
-        aug["new_size_max"] = conf["new_size_max_a"]
+        aug["new_size_min"] = conf.new_size_min_a
+        aug["new_size_max"] = conf.new_size_max_a
         aug["output_size" ] = (width, height)
         aug["circle_mask" ] = True
         aug["rotate"      ] = False
         aug["contrast"    ] = False
-        train_loader_a = get_data_loader_folder(os.path.join(conf['data_root'], 'train_fake'), batch_size, True , num_workers, augmentation=aug.copy(), precise = True )
+        train_loader_a = get_data_loader_folder(os.path.join(conf.data_root, 'train_fake'), batch_size, True , num_workers, augmentation=aug.copy(), precise = True )
         aug["circle_mask" ] = False
-        test_loader_a  = get_data_loader_folder(os.path.join(conf['data_root'], 'test_fake' ), batch_size, False, num_workers, augmentation=aug.copy(), precise = True )
-        aug["new_size_min"] = conf["new_size_min_b"]
-        aug["new_size_max"] = conf["new_size_max_b"]
-        train_loader_b = get_data_loader_folder(os.path.join(conf['data_root'], 'train_real'), batch_size, True , num_workers, augmentation=aug.copy(), precise = False)
-        test_loader_b  = get_data_loader_folder(os.path.join(conf['data_root'], 'test_real' ), batch_size, False, num_workers, augmentation=aug.copy(), precise = False)
+        test_loader_a  = get_data_loader_folder(os.path.join(conf.data_root, 'test_fake' ), batch_size, False, num_workers, augmentation=aug.copy(), precise = True )
+        aug["new_size_min"] = conf.new_size_min_b
+        aug["new_size_max"] = conf.new_size_max_b
+        train_loader_b = get_data_loader_folder(os.path.join(conf.data_root, 'train_real'), batch_size, True , num_workers, augmentation=aug.copy(), precise = False)
+        test_loader_b  = get_data_loader_folder(os.path.join(conf.data_root, 'test_real' ), batch_size, False, num_workers, augmentation=aug.copy(), precise = False)
 
         print("train_loader_a", len(train_loader_a))
         print("train_loader_b", len(train_loader_b))
@@ -104,9 +104,10 @@ def get_data_loader_folder(input_folder        ,
     return loader
 
 
-def get_config(config):
-    with open(config, 'r') as stream:
-        return yaml.load(stream, Loader=yaml.FullLoader)
+def get_config(config_path):
+    config = rp.load_yaml_file(config_path)
+    assert isinstance(config,dict)
+    return rp.DictReader(config)
 
 
 def __write_images(image_outputs, display_image_num, file_name):
@@ -189,14 +190,14 @@ def get_model_list(dirname, key):
     return last_model_name
 
 
-def get_scheduler(optimizer, hyperparameters, iterations=-1):
-    if 'lr_policy' not in hyperparameters or hyperparameters['lr_policy'] == 'constant':
+def get_scheduler(optimizer, hyp, iterations=-1):
+    if 'lr_policy' not in hyp or hyp.lr_policy == 'constant':
         scheduler = None # constant scheduler
-    elif hyperparameters['lr_policy'] == 'step':
-        scheduler = lr_scheduler.StepLR(optimizer, step_size=hyperparameters['step_size'],
-                                        gamma=hyperparameters['gamma'], last_epoch=iterations)
+    elif hyp.lr_policy == 'step':
+        scheduler = lr_scheduler.StepLR(optimizer, step_size=hyp.step_size,
+                                        gamma=hyp.gamma, last_epoch=iterations)
     else:
-        return NotImplementedError('learning rate policy [%s] is not implemented', hyperparameters['lr_policy'])
+        return NotImplementedError('learning rate policy [%s] is not implemented', hyp.lr_policy)
     return scheduler
 
 

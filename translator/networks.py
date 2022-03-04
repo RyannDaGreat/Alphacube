@@ -22,13 +22,13 @@ class MsImageDis(nn.Module):
     # Multi-scale discriminator architecture
     def __init__(self, input_dim, params):
         super(MsImageDis, self).__init__()
-        self.n_layer    = params['n_layer']
-        self.gan_type   = params['gan_type']
-        self.dim        = params['dim']
-        self.norm       = params['norm']
-        self.activ      = params['activ']
-        self.num_scales = params['num_scales']
-        self.pad_type   = params['pad_type']
+        self.n_layer    = params.n_layer
+        self.gan_type   = params.gan_type
+        self.dim        = params.dim
+        self.norm       = params.norm
+        self.activ      = params.activ
+        self.num_scales = params.num_scales
+        self.pad_type   = params.pad_type
         self.input_dim  = input_dim
         self.downsample = nn.AvgPool2d(3, stride=2, padding=[1, 1], count_include_pad=False)
         self.cnns = nn.ModuleList()
@@ -93,14 +93,14 @@ class MsImageDis(nn.Module):
 #    # AdaIN auto-encoder architecture
 #    def __init__(self, input_dim, params):
 #        super(AdaINGen, self).__init__()
-#        dim = params['dim']
-#        style_dim = params['style_dim']
-#        n_downsample = params['n_downsample']
-#        n_res = params['n_res']
-#        activ = params['activ']
-#        pad_type = params['pad_type']
-#        mlp_dim = params['mlp_dim']
-#        num_classes = params['num_classes']
+#        dim = params.dim
+#        style_dim = params.style_dim
+#        n_downsample = params.n_downsample
+#        n_res = params.n_res
+#        activ = params.activ
+#        pad_type = params.pad_type
+#        mlp_dim = params.mlp_dim
+#        num_classes = params.num_classes
 #        self.num_classes = num_classes
 #        self.n_downsample = n_downsample
 #
@@ -163,12 +163,12 @@ class StylelessGen(nn.Module):
     # AdaIN auto-encoder architecture
     def __init__(self, input_dim, params):
         super(StylelessGen, self).__init__()
-        dim          = params['dim']
-        #style_dim  = params['style_dim']
-        n_downsample = params['n_downsample']
-        n_res        = params['n_res']
-        activ        = params['activ']
-        pad_type     = params['pad_type']
+        dim          = params.dim
+        #style_dim  = params.style_dim
+        n_downsample = params.n_downsample
+        n_res        = params.n_res
+        activ        = params.activ
+        pad_type     = params.pad_type
         self.image_noise_level = .1 #TODO: Make this a parameter
 
         # content encoder
@@ -199,11 +199,11 @@ class StylelessGen(nn.Module):
 #     # VAE architecture
 #     def __init__(self, input_dim, params):
 #         super(VAEGen, self).__init__()
-#         dim = params['dim']
-#         n_downsample = params['n_downsample']
-#         n_res = params['n_res']
-#         activ = params['activ']
-#         pad_type = params['pad_type']
+#         dim = params.dim
+#         n_downsample = params.n_downsample
+#         n_res = params.n_res
+#         activ = params.activ
+#         pad_type = params.pad_type
 #
 #         # content encoder
 #         self.enc = ContentEncoder(n_downsample, n_res, input_dim, dim, 'in', activ, pad_type=pad_type)
@@ -232,12 +232,12 @@ class StylelessGen(nn.Module):
 #     # AdaIN auto-encoder architecture
 #     def __init__(self, input_dim, params):
 #         super(ResBlockSegmentation, self).__init__()
-#         dim = params['dim']
+#         dim = params.dim
 #         n_downsample = 3
 #         n_res = 3
-#         activ = params['activ']
-#         pad_type = params['pad_type']
-#         num_classes = params['num_classes']
+#         activ = params.activ
+#         pad_type = params.pad_type
+#         num_classes = params.num_classes
 #         self.n_downsample = n_downsample
 #
 #         # content encoder

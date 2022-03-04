@@ -19,6 +19,7 @@ from rp import (
     is_grayscale_image,
     is_image,
     load_image,
+    DictReader,
 )
 
 def default_loader(path):
@@ -81,21 +82,23 @@ class ImageFolder(data.Dataset):
         if len(imgs) == 0:
             raise RuntimeError("Found 0 images in: " + root + "\n")
 
+        augmentation = DictReader(augmentation)
+
         self.root            = root
         self.precise         = precise
         self.imgs            = imgs
         self.return_paths    = return_paths
         self.loader          = loader
-        self.output_size     = augmentation["output_size"]
-        self.add_circle_mask = "circle_mask" in augmentation and augmentation["circle_mask"] == True
-        self.rotate          = "rotate"      in augmentation and augmentation["rotate"     ] == True
-        self.contrast        = "contrast"    in augmentation and augmentation["contrast"   ] == True
+        self.output_size     = augmentation.output_size
+        self.add_circle_mask = "circle_mask" in augmentation and augmentation.circle_mask == True
+        self.rotate          = "rotate"      in augmentation and augmentation.rotate      == True
+        self.contrast        = "contrast"    in augmentation and augmentation.contrast    == True
 
         self.skip_crop = False #When evaluating, we might set this to True...
 
         if "new_size_min" in augmentation and "new_size_max" in augmentation:
-            self.new_size_min = augmentation["new_size_min"]
-            self.new_size_max = augmentation["new_size_max"]
+            self.new_size_min = augmentation.new_size_min
+            self.new_size_max = augmentation.new_size_max
         else:
             self.new_size_min = min(self.output_size)
             self.new_size_max = min(self.output_size)
