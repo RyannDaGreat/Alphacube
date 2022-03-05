@@ -25,6 +25,7 @@ init: kaiming                 # initialization [gaussian/kaiming/xavier/orthogon
 lr: 0.0001                    # initial learning rate lr_policy: step ### LEAVE THIS ALONE OR IT MIGHT NOT CONVERGE (even 10x is bad)
 step_size: 100000             # how often to decay learning rate
 gamma: 0.5                    # how much to decay learning rate
+
 gan_w: 1                      # weight of adversarial loss
 recon_x_w: 10                 # weight of image reconstruction loss
 recon_s_w: 1                  # weight of style reconstruction loss
@@ -33,11 +34,25 @@ recon_x_cyc_w: 10             # weight of explicit style augmented cycle consist
 
 # Ryan's Hyperparameters for trainer.py
 label_values: [0,50,100,150,200,255]
+
+#Weights
 view_consistency_weight: 20 #Used to be called texture_loss_weight
-view_consistency_version: std #std or var
-texture_multiplier: 1
-texture_reality_loss_weight: 2        #Gotta rename this; it controls how much the texture and translations have to match
+texture_reality_loss_weight   : 2        #Gotta rename this; it controls how much the texture and translations have to match
 recon_texture_reality_loss_weight: 2  #Gotta rename this; its like texture_reality_loss_weight but for photo-to-sim
+
+view_consistency:
+  height,width: 128    #View consistency recovery size
+  version: std         #std or var
+
+texture:
+  height,width: 256    #Height and width of the learned texture, in pixels
+  multiplier: 1        #0 effectively disables the texture. 1 is the minimum value to cover all colors. Larger values give the texture more control (recall this texture is residual)
+
+
+view_consistency_weight: 0 
+texture_reality_loss_weight: 0       
+recon_texture_reality_loss_weight: 0  
+texture:multiplier: 0
 
 # model options
 gen:

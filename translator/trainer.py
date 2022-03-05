@@ -50,11 +50,20 @@ class MUNIT_Trainer(nn.Module):
         self.hyp=hyperparameters
 
         #TODO: Connect the config to change the height, width, num_channels etc of the learnable textures
-        self.texture_pack = learnable_textures.LearnableTexturePackFourier(height=256,width=256,num_textures=len(hyp.label_values)) 
+        self.texture_pack = learnable_textures.LearnableTexturePackFourier(
+            height=hyp.texture.height, 
+            width =hyp.texture.width, 
+            num_textures=len(hyp.label_values)
+        )
 
         a_num_channels = hyp.input_dim_a#+self.texture_pack.num_channels
         b_num_channels = hyp.input_dim_b
-        self.view_consistency_loss = view_consistency.ViewConsistencyLoss(recovery_width = 128, recovery_height = 128, version = hyp.view_consistency_version)
+
+        self.view_consistency_loss = view_consistency.ViewConsistencyLoss(
+            recovery_width =hyp.view_consistency.width,
+            recovery_height=hyp.view_consistency.height,
+            version        =hyp.view_consistency.version,
+        )
 
         print("BATCH SIZE",hyp.batch_size)
         if not hyp.batch_size>1:
@@ -122,7 +131,7 @@ class MUNIT_Trainer(nn.Module):
         content = x_a+0 #Might replace with better content later
 
         #RESIDUAL:
-        x_a = x_a + (scene_projections-1/2)*2*hyp.texture_multiplier#let's try to minimize effort right now...let's just use 3 channels for visualization etc... todo make all 6:
+        x_a = x_a + (scene_projections-1/2)*2*hyp.texture.multiplier#let's try to minimize effort right now...let's just use 3 channels for visualization etc... todo make all 6:
 
         x_a = torch.cat((x_a,content),dim=1)#BCHW
 
