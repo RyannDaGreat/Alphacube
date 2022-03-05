@@ -6,7 +6,6 @@ Licensed under the CC BY-NC-SA 4.0 license (https://creativecommons.org/licenses
 import argparse
 import os
 import random
-import shutil
 import sys
 
 import tensorboardX
@@ -54,19 +53,28 @@ test_display_images_a  = torch.stack(test_a ).cuda()
 test_display_images_b  = torch.stack(test_b ).cuda()
 
 # Setup logger and output folders
-model_name = os.path.splitext(os.path.basename(opts.config))[0]
+model_name = rp.get_file_name(opts.config, include_file_extension=False)
 train_writer = tensorboardX.SummaryWriter(os.path.join(opts.output_path + "/logs", model_name))
 output_directory = os.path.join(opts.output_path + "/outputs", model_name)
 checkpoint_directory, image_directory = prepare_sub_folder(output_directory)
 
-# Backup copy of current settings and scripts:
-shutil.copy(opts.config, os.path.join(output_directory, 'config.yaml')) # copy config file to output folder
-runPath = os.path.dirname(os.path.realpath(__file__))
-for f in os.listdir(runPath):
-    if f.endswith(".py"):
-        python_files_dir=os.path.join(output_directory, '.python_files', f)
-        rp.make_directory(python_files_dir)
-        shutil.copy( os.path.join(runPath, f), python_files_dir) # copy config file to output folder
+run_path = rp.get_parent_folder(__file__)
+
+def backup_code():
+    # Backup copy of current settings and scripts:
+    
+    #Backup the config
+    rp.copy_file(opts.config, os.path.join(output_directory, 'config.yaml')) # copy config file to output folder
+
+    #Backup the python files
+    python_files_dir=os.path.join(output_directory, 'python_files')
+    rp.make_directory(python_files_dir)
+    for python_file in rp.get_all_files(run_path, file_extension_filter='py'):
+        file_name = rp.get_file_name(python_file) + '.old' #Make sure it doesn't have a .py extension, so my refactoring tools don't see it
+        new_path = rp.path_join(python_files_dir, file_name)
+        rp.copy_file(python_file, new_path)
+
+backup_code()
 
 # Start training
 iterations = trainer.resume(checkpoint_directory) if opts.resume else 0
