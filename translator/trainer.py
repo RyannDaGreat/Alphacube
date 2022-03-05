@@ -203,7 +203,7 @@ class MUNIT_Trainer(nn.Module):
 
         
         #View Consistency Loss
-        loss_view_consistency = self.view_consistency_loss(x_ab, scene_uvs, scene_labels)
+        loss_view_consistency = hyp.view_consistency_weight and self.view_consistency_loss(x_ab, scene_uvs, scene_labels)
         # if (loss_view_consistency.isnan() | loss_view_consistency.isinf()).any(): print("view consistency has nan or inf")
 
         #Total loss
@@ -217,11 +217,11 @@ class MUNIT_Trainer(nn.Module):
         loss_gen_total += hyp.recon_x_cyc_w           * loss_gen_cycrecon_x_b
         loss_gen_total += hyp.view_consistency_weight * loss_view_consistency
         
-        texture_reality_loss       = self.recon_criterion(x_ab, x_a [:,:3]) * hyp.texture_reality_loss_weight
-        recon_texture_reality_loss = self.recon_criterion(x_b , x_ba[:,:3]) * hyp.recon_texture_reality_loss_weight
+        a2b_texture_reality_loss = self.recon_criterion(x_ab, x_a [:,:3]) * hyp.recon_a2b_texture_reality_loss_weight
+        b2a_texture_reality_loss = self.recon_criterion(x_b , x_ba[:,:3]) * hyp.recon_b2a_texture_reality_loss_weight
 
-        loss_gen_total = loss_gen_total + texture_reality_loss
-        loss_gen_total = loss_gen_total + recon_texture_reality_loss
+        loss_gen_total = loss_gen_total + a2b_texture_reality_loss
+        loss_gen_total = loss_gen_total + b2a_texture_reality_loss
 
         loss_gen_total.backward()
 
