@@ -1,0 +1,118 @@
+# Copyright (C) 2018 NVIDIA Corporation.  All rights reserved.
+# Licensed under the CC BY-NC-SA 4.0 license (https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode).
+
+# logger options
+
+# # ryan-specific optimization options ACTUAL RUNS
+max_iter: 300000            # maximum number of training iterations
+batch_size: 5               # batch size
+image_save_iter: 250        # How often do you want to save output images during training
+image_display_iter: 250     # (How often to update train_current.png and test_current.png's) How often do you want to display output images during training
+display_size: 16            # How many images do you want to display each time
+snapshot_save_iter: 5000    # How often do you want to save trained models
+log_iter: 10                # How often do you want to log the training stats
+
+# # ryan-specific optimization options TESTING BREAKYNESS
+# max_iter: 30                # maximum number of training iterations
+# batch_size: 2               # batch size
+# image_save_iter: 10         # How often do you want to save output images during training
+# image_display_iter: 10      # How often do you want to display output images during training
+# snapshot_save_iter: 10    # How often do you want to save trained models
+
+# other optimization options
+weight_decay: 0.0001          # weight decay
+beta1: 0.5                    # Adam parameter
+beta2: 0.999                  # Adam parameter
+init: kaiming                 # initialization [gaussian/kaiming/xavier/orthogonal]
+lr: 0.0001                    # initial learning rate lr_policy: step ### LEAVE THIS ALONE OR IT MIGHT NOT CONVERGE (even 10x is bad)
+step_size: 100000             # how often to decay learning rate
+gamma: 0.5                    # how much to decay learning rate
+gan_w: 1                      # weight of adversarial loss
+recon_x_w: 10                 # weight of image reconstruction loss
+recon_s_w: 1                  # weight of style reconstruction loss
+recon_c_w: 1                  # weight of content reconstruction loss
+recon_x_cyc_w: 10             # weight of explicit style augmented cycle consistency loss
+# label_w: 1                    # weight of label loss
+# ms_ssim_a_w: 0                # weight of multi-scale structural similarity loss (a -> b)
+# ms_ssim_b_w: 0                # weight of multi-scale structural similarity loss (b -> a)
+
+# model options
+gen:
+  dim: 64                     # number of filters in the bottommost layer
+  mlp_dim: 256                # number of filters in MLP
+  # style_dim: 8                # length of style code
+  activ: relu                 # activation function [relu/lrelu/prelu/selu/tanh]
+  n_downsample: 2             # number of downsampling layers in content encoder #I want to set this to 3 but I run out of VRAM....
+  n_res: 4                    # number of residual blocks in content encoder/decoder
+  pad_type: reflect           # padding type [zero/reflect]
+  # num_classes: 8              # number of classes in segmentation map
+dis:
+  dim: 64                     # number of filters in the bottommost layer
+  norm: none                  # normalization layer [none/bn/in/ln]
+  activ: lrelu                # activation function [relu/lrelu/prelu/selu/tanh]
+  n_layer: 4                  # number of layers in D
+  gan_type: lsgan             # GAN loss [lsgan/nsgan]
+  num_scales: 3               # number of scales #ARE THESE THE THREE DISCRIMINATORS I SAW IN MUNIT?!?!?
+  pad_type: reflect           # padding type [zero/reflect]
+
+# data options
+input_dim_a: 6                    # number of image channels [1/3]
+input_dim_b: 3                    # number of image channels [1/3]
+num_workers: 8                    # number of data loading threads
+
+
+crop_image:
+  height,width: 256
+  height_translation,width_translation: 256
+# Data options used during translation (after models have been trained) by translate.py.
+# If these are not set, will fall back to use the data options above.
+crop_image_height_translation: 256                      # random crop image of this height
+crop_image_width_translation: 256                       # random crop image of this width
+
+
+#Capital letters are "Meta" parameters
+VARIANTS:
+  #Variants are an optinoal parameter you can pass as an arg
+  #Should we have variants? Or just multiple configs? (Probably just multiple configs; makes it straightforward to understand what you're getting when you load a config)
+  #   - Answer: YES. Variants are good for ablations and small tweaks, to see how things change when only one thing is touched!
+  #   - That said, for a given dataset we might have different configs...we can just deal with that by the name of the config, which specified a version (in the config file name).
+  #   - Additional arguments should simply override parameters (arbitrarily). For example, GPU's.
+  #   - Question: How to reconcile both VARIANTS and STAGES? Does each variant get to override STAGES as well? What if it wants to delete a keyframe - can deltas delete then rewrite things yet?
+  #   - Question: Can schedule use tweening? (I don't see why not...if you really don't want tweening, you could
+  #       Example of circumventing tweening using dyaml:
+  #         STAGES:
+  #            1000,1999:
+  #               value: 0
+  #            2000,2999:
+  #               value 1
+  #   - NOTE: we must store the epoch number in the model weights .pth files, or else it won't know what to do with the config cause it won't know where in the schedule it is!!
+  #OR, variants are just for testing that...small variants. They don't affect the schedule, and they're 100% optional.
+  #When booting up the trainer, it should announce it's config file, it's variant, its epoch, its overrides (through args), and some additional info (also specified in the config - such as GPU's etc. These announcements are in an ANNOUNCEMENTS section, that will print stuff into the terminal each time we reach a new STAGES item.)
+  no_tex_reality:
+    gpus: [0,1,2]
+    reality_loss_weight: .1
+    data_root: ./datasets/five_items   # dataset folder location
+
+STAGES:
+  #This is an example schedule...to be implemented...
+  #...it will mutate the config. So, everyone should be listening to some dict in that config (and not saving it in objects, as it does now...)
+  0:
+    new_size:a,b:min,max: 256
+  5000:
+    new_size:a,b:min,max: 320
+  999999999:
+    batch_size: 20
+
+
+
+
+
+#GOOD RESOLUTION STAGES TO TRAIN BY:
+new_size:a,b:min,max: 500 # first (randomly) resize the shortest image side to this size
+
+#   64, 128, 256, 300, 320, 450
+#TIMING PER ITER:
+#     64: μ=0.1981049444,  σ=0.0281622
+#    128: μ=0.29
+
+data_root: ./datasets/five_items   # dataset folder location
