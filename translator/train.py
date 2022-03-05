@@ -12,6 +12,7 @@ import sys
 import tensorboardX
 import torch
 import torch.backends.cudnn as cudnn
+import rp
 
 from trainer import MUNIT_Trainer
 from utils import get_all_data_loaders, prepare_sub_folder, write_html, write_loss, get_config, write_2images, Timer
@@ -63,7 +64,9 @@ shutil.copy(opts.config, os.path.join(output_directory, 'config.yaml')) # copy c
 runPath = os.path.dirname(os.path.realpath(__file__))
 for f in os.listdir(runPath):
     if f.endswith(".py"):
-        shutil.copy( os.path.join(runPath, f), os.path.join(output_directory, f) ) # copy config file to output folder
+        python_files_dir=os.path.join(output_directory, '.python_files', f)
+        rp.make_directory(python_files_dir)
+        shutil.copy( os.path.join(runPath, f), python_files_dir) # copy config file to output folder
 
 # Start training
 iterations = trainer.resume(checkpoint_directory, hyperparameters=config) if opts.resume else 0
