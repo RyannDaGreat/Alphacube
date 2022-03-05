@@ -69,7 +69,7 @@ for f in os.listdir(runPath):
         shutil.copy( os.path.join(runPath, f), python_files_dir) # copy config file to output folder
 
 # Start training
-iterations = trainer.resume(checkpoint_directory, hyperparameters=config) if opts.resume else 0
+iterations = trainer.resume(checkpoint_directory) if opts.resume else 0
 
 def save_checkpoint():
     trainer.save(checkpoint_directory, iterations)
@@ -99,9 +99,8 @@ try:
 
             with Timer("Elapsed time in update: %f"):
                 # Main training code
-                #trainer.seg_update(images_a, labels_a, config)
-                trainer.dis_update(images_a, images_b, config)
-                trainer.gen_update(images_a, images_b, config)
+                trainer.dis_update(images_a, images_b)
+                trainer.gen_update(images_a, images_b)
                 torch.cuda.synchronize()
             trainer.update_learning_rate()
 

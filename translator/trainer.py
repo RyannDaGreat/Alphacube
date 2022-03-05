@@ -46,8 +46,7 @@ class MUNIT_Trainer(nn.Module):
         else:
             self.trainable=False
 
-        hyp=hyperparameters #Shorthand notation
-        self.hyp=hyperparameters
+        hyp=self.hyp=hyp=hyperparameters
 
         #TODO: Connect the config to change the height, width, num_channels etc of the learnable textures
         self.texture_pack = learnable_textures.LearnableTexturePackFourier(
@@ -156,12 +155,11 @@ class MUNIT_Trainer(nn.Module):
         return x_ab, x_ba
 
 
-    def gen_update(self, x_a, x_b, hyperparameters):
+    def gen_update(self, x_a, x_b):
 
         assert self.trainable, 'This MUNIT_Trainer is not trainable, and does not have optimizers or discriminators etc (to save memory)'
 
-        hyp=hyperparameters #Shorthand notation
-
+        hyp=self.hyp
         self.train()
 
         #Because precise=True, x_a should be in the range (0,1) and x_b should be in the range (-1,1) because precise=False for that domain (see utils.py)
@@ -354,11 +352,11 @@ class MUNIT_Trainer(nn.Module):
 
         return x_ba
 
-    def dis_update(self, x_a, x_b, hyperparameters):
+    def dis_update(self, x_a, x_b):
 
         assert self.trainable, 'This MUNIT_Trainer is not trainable, and does not have optimizers or discriminators etc'
 
-        hyp=hyperparameters #Shorthand notation
+        hyp=self.hyp
         self.train()
 
         x_a, _, _ = self.project_texture_pack(x_a)
@@ -390,9 +388,9 @@ class MUNIT_Trainer(nn.Module):
             self.tex_scheduler.step()
 
 
-    def resume(self, checkpoint_dir, hyperparameters):
+    def resume(self, checkpoint_dir):
 
-        hyp=hyperparameters #Shorthand notation
+        hyp=self.hyp
 
         # Load generators
         last_model_name = get_model_list(checkpoint_dir, "gen")
