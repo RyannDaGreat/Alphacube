@@ -219,12 +219,8 @@ class MUNIT_Trainer(nn.Module):
         loss_gen_total += hyp.recon_x_cyc_w           * loss_gen_cycrecon_x_b
         loss_gen_total += hyp.view_consistency_weight * loss_view_consistency
         
-        #TODO: Replace these losses with self.reconstruction_criterion!  
-        texture_reality_loss       =(      (x_ab-x_a[:,:3])**2).mean()    *hyp.texture_reality_loss_weight
-        texture_reality_loss      +=-msssim(x_ab,x_a[:,:3],normalize=True)*hyp.texture_reality_loss_weight #normalize=True because without it we get tons of NaN's
-            
-        recon_texture_reality_loss =(      (x_b-x_ba[:,:3])**2).mean()    *hyp.recon_texture_reality_loss_weight
-        recon_texture_reality_loss+=-msssim(x_b,x_ba[:,:3],normalize=True)*hyp.recon_texture_reality_loss_weight #normalize=True because without it we get tons of NaN's
+        texture_reality_loss       = self.recon_criterion(x_ab, x_a [:,:3]) * hyp.texture_reality_loss_weight
+        recon_texture_reality_loss = self.recon_criterion(x_b , x_ba[:,:3]) * hyp.recon_texture_reality_loss_weight
 
         loss_gen_total = loss_gen_total + texture_reality_loss
         loss_gen_total = loss_gen_total + recon_texture_reality_loss
