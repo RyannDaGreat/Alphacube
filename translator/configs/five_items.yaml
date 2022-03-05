@@ -26,17 +26,17 @@ lr: 0.0001                    # initial learning rate lr_policy: step ### LEAVE 
 step_size: 100000             # how often to decay learning rate
 gamma: 0.5                    # how much to decay learning rate
 
+#Weights
 gan_w: 1                      # weight of adversarial loss
 recon_x_w: 10                 # weight of image reconstruction loss
 recon_c_w: 1                  # weight of content reconstruction loss
 recon_x_cyc_w: 10             # weight of explicit style augmented cycle consistency loss
-recon_a2b_texture_reality_loss_weight: 2  #Gotta rename this; it controls how much the texture and translations have to match
-recon_b2a_texture_reality_loss_weight: 2  #Gotta rename this; its like texture_reality_loss_weight but for photo-to-sim
-view_consistency_weight: 20 #Used to be called texture_loss_weight
+view_consistency_w: 20 #Used to be called texture_loss_weight
+texture_reality_a2b_w: 2  #Gotta rename this; it controls how much the texture and translations have to match
+texture_reality_b2a_w: 0  #Gotta rename this; its like texture_reality_loss_weight but for photo-to-sim
 
 # Ryan's Hyperparameters for trainer.py
 label_values: [0,50,100,150,200,255]
-
 
 view_consistency:
   height,width: 128    #View consistency recovery size

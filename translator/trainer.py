@@ -117,9 +117,15 @@ class MUNIT_Trainer(nn.Module):
 
         scene_labels = scene_reader.replace_values(scene_labels, old_labels, new_labels)
 
-        texture_pack=self.texture_pack()
+        texture_pack  = self.texture_pack()
+        texture_pack *= hyp.texture.multiplier
+
+        if not hyp.texture.multiplier:
+            #Save some time on the backwards pass
+            texture_pack = torch.zeros_like(texture_pack)
 
         scene_projections = projector.project_textures(scene_uvs, scene_labels, texture_pack)
+
 
         x_a_blue = scene_reader.replace_values(scene_labels, torch.tensor(list(range(len(hyp.label_values)))), torch.tensor(hyp.label_values) )
         x_a[:, 2] = x_a_blue / 255
@@ -130,7 +136,7 @@ class MUNIT_Trainer(nn.Module):
         content = x_a+0 #Might replace with better content later
 
         #RESIDUAL:
-        x_a = x_a + (scene_projections-1/2)*2*hyp.texture.multiplier#let's try to minimize effort right now...let's just use 3 channels for visualization etc... todo make all 6:
+        x_a = x_a + (scene_projections-1/2)*2#let's try to minimize effort right now...let's just use 3 channels for visualization etc... todo make all 6:
 
         x_a = torch.cat((x_a,content),dim=1)#BCHW
 
@@ -183,7 +189,6 @@ class MUNIT_Trainer(nn.Module):
         # encode again
         c_b_recon = self.gen_a.encode(x_ba)
         c_a_recon = self.gen_b.encode(x_ab)
-        # c_a_recon, s_b_recon = self.gen_b.encode(x_ab)
 
         # decode again (if needed)
         x_aba = self.gen_a.decode(c_a_recon)            if hyp.recon_x_cyc_w > 0 else None
@@ -202,26 +207,31 @@ class MUNIT_Trainer(nn.Module):
         loss_gen_adv_b = self.dis_b.calc_gen_loss(x_ab)
 
         
+        #Note: The "not weight or loss" pattern below is meant to prevent computing loss when weight=0
+
         #View Consistency Loss
-        loss_view_consistency = hyp.view_consistency_weight and self.view_consistency_loss(x_ab, scene_uvs, scene_labels)
+        loss_view_consistency = not hyp.view_consistency_w or self.view_consistency_loss(x_ab, scene_uvs, scene_labels)
         # if (loss_view_consistency.isnan() | loss_view_consistency.isinf()).any(): print("view consistency has nan or inf")
 
-        #Total loss
-        loss_gen_total  = hyp.gan_w                   * loss_gen_adv_a       
-        loss_gen_total += hyp.gan_w                   * loss_gen_adv_b       
-        loss_gen_total += hyp.recon_x_w               * loss_gen_recon_x_a   
-        loss_gen_total += hyp.recon_c_w               * loss_gen_recon_c_a   
-        loss_gen_total += hyp.recon_x_w               * loss_gen_recon_x_b   
-        loss_gen_total += hyp.recon_c_w               * loss_gen_recon_c_b   
-        loss_gen_total += hyp.recon_x_cyc_w           * loss_gen_cycrecon_x_a
-        loss_gen_total += hyp.recon_x_cyc_w           * loss_gen_cycrecon_x_b
-        loss_gen_total += hyp.view_consistency_weight * loss_view_consistency
-        
-        a2b_texture_reality_loss = self.recon_criterion(x_ab, x_a [:,:3]) * hyp.recon_a2b_texture_reality_loss_weight
-        b2a_texture_reality_loss = self.recon_criterion(x_b , x_ba[:,:3]) * hyp.recon_b2a_texture_reality_loss_weight
+        #Texture Reality Loss
 
-        loss_gen_total = loss_gen_total + a2b_texture_reality_loss
-        loss_gen_total = loss_gen_total + b2a_texture_reality_loss
+        loss_texture_reality_a2b = not hyp.texture_reality_a2b_w or self.recon_criterion(x_ab, x_a [:,:3])
+        loss_texture_reality_b2a = not hyp.texture_reality_b2a_w or self.recon_criterion(x_b , x_ba[:,:3])
+
+        #Total loss
+        loss_gen_total  = hyp.gan_w                 * loss_gen_adv_a
+        loss_gen_total += hyp.gan_w                 * loss_gen_adv_b
+        loss_gen_total += hyp.recon_x_w             * loss_gen_recon_x_a
+        loss_gen_total += hyp.recon_c_w             * loss_gen_recon_c_a
+        loss_gen_total += hyp.recon_x_w             * loss_gen_recon_x_b
+        loss_gen_total += hyp.recon_c_w             * loss_gen_recon_c_b
+        loss_gen_total += hyp.recon_x_cyc_w         * loss_gen_cycrecon_x_a
+        loss_gen_total += hyp.recon_x_cyc_w         * loss_gen_cycrecon_x_b
+        loss_gen_total += hyp.view_consistency_w    * loss_view_consistency
+        loss_gen_total += hyp.texture_reality_a2b_w * loss_texture_reality_a2b
+        loss_gen_total += hyp.texture_reality_b2a_w * loss_texture_reality_b2a
+        
+
 
         loss_gen_total.backward()
 
