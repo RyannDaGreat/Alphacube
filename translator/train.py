@@ -84,21 +84,21 @@ def save_checkpoint():
 
 def get_sample_outputs():
     with torch.no_grad():
-        test_image_outputs  = trainer.sample(test_display_images_a , test_display_images_b )
         train_image_outputs = trainer.sample(train_display_images_a, train_display_images_b)
-    return test_image_outputs, train_image_outputs
+        test_image_outputs  = trainer.sample(test_display_images_a , test_display_images_b )
+    return train_image_outputs, test_image_outputs
 
 def write_iter_images():
     train_image_outputs,test_image_outputs = get_sample_outputs()
-    write_2images(test_image_outputs , display_size, image_directory, 'test_%08d'  % (iterations + 1 ))
     write_2images(train_image_outputs, display_size, image_directory, 'train_%08d' % (iterations + 1 ))
+    write_2images(test_image_outputs , display_size, image_directory, 'test_%08d'  % (iterations + 1 ))
     # HTML
     write_html(output_directory + "/index.html", iterations + 1, config.image_save_iter, 'images')
 
 def write_current_images():
     train_image_outputs,test_image_outputs = get_sample_outputs()
-    write_2images(test_image_outputs , display_size, image_directory, 'test_current')
     write_2images(train_image_outputs, display_size, image_directory, 'train_current')
+    write_2images(test_image_outputs , display_size, image_directory, 'test_current')
 
 try:
     while True:
