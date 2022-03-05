@@ -6,9 +6,8 @@ try:
 
             with Timer("Elapsed time in update: %f"):
                 # Main training code
-                #trainer.seg_update(images_a, labels_a, config)
-                trainer.dis_update(images_a, images_b, config)
-                trainer.gen_update(images_a, images_b, config)
+                trainer.dis_update(images_a, images_b)
+                trainer.gen_update(images_a, images_b)
                 torch.cuda.synchronize()
             trainer.update_learning_rate()
 
