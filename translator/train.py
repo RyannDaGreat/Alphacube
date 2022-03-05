@@ -19,8 +19,12 @@ from utils import get_all_data_loaders, prepare_sub_folder, write_html, write_lo
 parser = argparse.ArgumentParser()
 parser.add_argument('--config', type=str, default='configs/default_config.yaml', help='Path to the config file.')
 parser.add_argument('--output_path', type=str, default='trained_models', help="outputs path")
+parser.add_argument('--device', type=int, default=0, help="outputs path")
 parser.add_argument("--resume", action="store_true")
 opts = parser.parse_args()
+
+print("Device:",opts.device)
+torch.cuda.set_device(opts.device)
 
 cudnn.benchmark = True
 
