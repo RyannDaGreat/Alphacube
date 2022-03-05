@@ -65,8 +65,11 @@ class MUNIT_Trainer(nn.Module):
         )
 
         print("BATCH SIZE",hyp.batch_size)
-        if not hyp.batch_size>1:
-            print( "batch_size should be MORE than 1, but its %i"%hyp.batch_size)
+
+        if hyp.view_consistency_w and not hyp.batch_size>1:
+            print( "Using hyp.view_consistency_w! batch_size should be MORE than 1, but its %i"%hyp.batch_size)
+            #If hyp.batch_size==1, we can mathematically guarentee that loss_view_consistency==0 (the variance of any length-1 vector is 0)
+            hyp.view_consistency_w = 0 #Save time by skipping loss_view_consistency, becuase 0*0=0
 
         if self.trainable:
             lr = hyp.lr
