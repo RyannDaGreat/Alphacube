@@ -66,20 +66,10 @@ class MUNIT_Trainer(nn.Module):
         # Initiate the networks
         self.gen_a = StylelessGen(a_num_channels, hyp.gen)  # auto-encoder for domain a
         self.gen_b = StylelessGen(b_num_channels, hyp.gen)  # auto-encoder for domain b
-        # self.gen_b = AdaINGen  (hyperparameters.input_dim_b, hyperparameters.gen)  # auto-encoder for domain b
 
         if self.trainable:
             self.dis_a = MsImageDis(a_num_channels, hyp.dis) # discriminator for domain a
             self.dis_b = MsImageDis(b_num_channels, hyp.dis) # discriminator for domain b
-
-        # self.instancenorm = nn.InstanceNorm2d(512, affine=False)
-
-        # self.style_dim   = hyperparameters.gen['style_dim'  ]
-        # self.num_classes = hyperparameters.gen['num_classes']
-
-        # fix the noise used in sampling
-        # display_size = int(hyperparameters.display_size)
-        # self.s_b = torch.randn(display_size, self.style_dim, 1, 1).cuda()
 
         # Setup the optimizers
         if self.trainable:
@@ -123,11 +113,6 @@ class MUNIT_Trainer(nn.Module):
 
         scene_projections = projector.project_textures(scene_uvs, scene_labels, texture_pack)
 
-        #TOO MANY CHANNELS:
-        # x_a = x_a * 2 - 1 #Convert from 0,1 range to -1,1 range
-        # x_a = torch.stack((x_a,scene_projections), dim=1) #Add projected textures
-        # that involves creating more visualizations for all 6 channels and textures
-
         x_a_blue = scene_reader.replace_values(scene_labels, torch.tensor(list(range(len(hyp.label_values)))), torch.tensor(hyp.label_values) )
         x_a[:, 2] = x_a_blue / 255
 
@@ -135,12 +120,6 @@ class MUNIT_Trainer(nn.Module):
         x_a=x_a*2-1
 
         content = x_a+0 #Might replace with better content later
-
-        #PURE LEARNED:
-        # x_a = scene_projections #let's try to minimize effort right now...let's just use 3 channels for visualization etc... todo make all 6:
-
-        #COMPROMISE:
-        # x_a[:,:2] = scene_projections[:,:2] #A compromise...I'll force the third channel (blue) to be preserved and the first two channels (R,G) are learnable. I'll add more channels later...but right now I don't have the visualizers for this.
 
         #RESIDUAL:
         x_a = x_a + (scene_projections-1/2)*2*hyp.texture_multiplier#let's try to minimize effort right now...let's just use 3 channels for visualization etc... todo make all 6:
@@ -159,16 +138,11 @@ class MUNIT_Trainer(nn.Module):
     def forward(self, x_a, x_b):
         x_a, _, _ = self.project_texture_pack(x_a)
 
-        #s_a = Variable(self.s_a)
-        # s_b = Variable(self.s_b)
-
         c_a = self.gen_a.encode(x_a)
         c_b = self.gen_b.encode(x_b)
-        # c_b, s_b_fake = self.gen_b.encode(x_b)
 
         x_ba = self.gen_a.decode(c_b)
         x_ab = self.gen_b.decode(c_a)
-        # x_ab = self.gen_b.decode(c_a, s_b)
 
         return x_ab, x_ba
 
@@ -181,51 +155,23 @@ class MUNIT_Trainer(nn.Module):
 
         self.train()
 
-        ###########################
-        ####### RYAN'S CODE #######
-        ###########################
-
         #Because precise=True, x_a should be in the range (0,1) and x_b should be in the range (-1,1) because precise=False for that domain (see utils.py)
 
         x_a, scene_uvs, scene_labels = self.project_texture_pack(x_a)
 
         self.tex_opt.zero_grad()
-
-
-        #############################
-        ####### ORIGINAL CODE #######
-        #############################
-        
         self.gen_opt.zero_grad()
-
-        # s_b = torch.randn(x_b.size(0), self.style_dim, 1, 1).cuda()
 
         # encode
         c_a = self.gen_a.encode(x_a)
         c_b = self.gen_b.encode(x_b)
-        # c_b, s_b_prime = self.gen_b.encode(x_b)
 
-        # Half the time, use a real style instead of a randomly drawn one:
-        # if random.random() > 0.5:
-        #     s_b = s_b_prime.detach()
-        # decode (cross domain)
         x_ba = self.gen_a.decode(c_b)
         x_ab = self.gen_b.decode(c_a)
-        # x_ab = self.gen_b.decode(c_a, s_b)
 
         # decode (within domain)
         x_a_recon = self.gen_a.decode(c_a)
         x_b_recon = self.gen_b.decode(c_b)
-        # x_b_recon = self.gen_b.decode(c_b, s_b_prime)
-
-        # Structural similarity:
-        # x_a_brightness  = torch.mean(x_a , dim=1, keepdim=True)
-        # x_b_brightness  = torch.mean(x_b , dim=1, keepdim=True)
-        # x_ab_brightness = torch.mean(x_ab, dim=1, keepdim=True)
-        # x_ba_brightness = torch.mean(x_ba, dim=1, keepdim=True)
-
-        # loss_msssim_ab = -msssim(x_a_brightness, x_ab_brightness, normalize=True)
-        # loss_msssim_ba = -msssim(x_b_brightness, x_ba_brightness, normalize=True)
 
         # encode again
         c_b_recon = self.gen_a.encode(x_ba)
@@ -235,27 +181,22 @@ class MUNIT_Trainer(nn.Module):
         # decode again (if needed)
         x_aba = self.gen_a.decode(c_a_recon)            if hyp.recon_x_cyc_w > 0 else None
         x_bab = self.gen_b.decode(c_b_recon)            if hyp.recon_x_cyc_w > 0 else None
-        # x_bab = self.gen_b.decode(c_b_recon, s_b_prime) if hyperparameters.recon_x_cyc_w > 0 else None
 
         # reconstruction loss
         loss_gen_recon_x_a    = self.recon_criterion(x_a_recon, x_a)
         loss_gen_recon_x_b    = self.recon_criterion(x_b_recon, x_b)
-        # loss_gen_recon_s_b    = self.recon_criterion(s_b_recon, s_b)
         loss_gen_recon_c_a    = self.recon_criterion(c_a_recon, c_a)
         loss_gen_recon_c_b    = self.recon_criterion(c_b_recon, c_b)
         loss_gen_cycrecon_x_a = self.recon_criterion(x_aba    , x_a) if hyp.recon_x_cyc_w > 0 else 0
         loss_gen_cycrecon_x_b = self.recon_criterion(x_bab    , x_b) if hyp.recon_x_cyc_w > 0 else 0
 
-        loss_gen_adv_a = self.dis_a.calc_gen_loss(x_ba)
         # GAN loss
+        loss_gen_adv_a = self.dis_a.calc_gen_loss(x_ba)
         loss_gen_adv_b = self.dis_b.calc_gen_loss(x_ab)
 
         
         #View Consistency Loss
         loss_view_consistency = self.view_consistency_loss(x_ab, scene_uvs, scene_labels)
-        # loss_view_consistency = 0
-        # print(float(loss_view_consistency))
-
         # if (loss_view_consistency.isnan() | loss_view_consistency.isinf()).any(): print("view consistency has nan or inf")
 
         #Total loss
@@ -268,10 +209,6 @@ class MUNIT_Trainer(nn.Module):
         loss_gen_total += hyp.recon_x_cyc_w           * loss_gen_cycrecon_x_a
         loss_gen_total += hyp.recon_x_cyc_w           * loss_gen_cycrecon_x_b
         loss_gen_total += hyp.view_consistency_weight * loss_view_consistency
-        # loss_gen_total += hyperparameters.ms_ssim_a_w   * loss_msssim_ab
-        # loss_gen_total += hyperparameters.ms_ssim_b_w   * loss_msssim_ba
-        # loss_gen_total += hyperparameters.recon_s_w     * loss_gen_recon_s_b
-
         
         #TODO: Replace these losses with self.reconstruction_criterion!  
         texture_reality_loss       =(      (x_ab-x_a[:,:3])**2).mean()    *hyp.texture_reality_loss_weight
@@ -288,19 +225,15 @@ class MUNIT_Trainer(nn.Module):
         self.tex_opt.step()
         self.gen_opt.step()
 
-
         #Unimportant code:
         self.loss_gen_adv_a        = loss_gen_adv_a       .item()
         self.loss_gen_adv_b        = loss_gen_adv_a       .item()
         self.loss_gen_recon_x_a    = loss_gen_recon_x_a   .item()
         self.loss_gen_recon_c_a    = loss_gen_recon_c_a   .item()
         self.loss_gen_recon_x_b    = loss_gen_recon_x_b   .item()
-        # self.loss_gen_recon_s_b    = loss_gen_recon_s_b   .item()
         self.loss_gen_recon_c_b    = loss_gen_recon_c_b   .item()
         self.loss_gen_cycrecon_x_a = loss_gen_cycrecon_x_a.item()
         self.loss_gen_cycrecon_x_b = loss_gen_cycrecon_x_b.item()
-        # self.loss_msssim_ab        = loss_msssim_ab       .item()
-        # self.loss_msssim_ba        = loss_msssim_ba       .item()
         self.loss_gen_total = loss_gen_total.item()
 
 
@@ -316,25 +249,20 @@ class MUNIT_Trainer(nn.Module):
 
         x_a, _, _ = self.project_texture_pack(x_a)
 
-        # s_b = self.s_b
         x_a_recon, x_b_recon, x_ba, x_bab, x_ab, x_aba, x_ab_rand = [], [], [], [], [], [], []
         for i in range(x_a.size(0)):
             # get individual images from list:
             x_a_ = x_a[i].unsqueeze(0)
             x_b_ = x_b[i].unsqueeze(0)
-            # s_b_ = s_b[i].unsqueeze(0)
 
             # a to b:
             c_a        = self.gen_a.encode(x_a_)
             x_a_recon_ = self.gen_a.decode(c_a )     # Reconstruct in same domain
 
-            # c_b, s_b_extract = self.gen_b.encode(x_b_)
             c_b= self.gen_b.encode(x_b_)
 
-            # x_ab_          = self.gen_b.decode(c_a, s_b_)     # translate
             x_ab_          = self.gen_b.decode(c_a   ) # translate
             c_ab           = self.gen_b.encode(x_ab_ ) # re-encode
-            # c_ab, s_b_fake = self.gen_b.encode(x_ab_) # re-encode
             x_aba_         = self.gen_a.decode(c_ab  ) # translate back
 
             x_a_recon.append(x_a_recon_ )
@@ -343,15 +271,12 @@ class MUNIT_Trainer(nn.Module):
 
             # Encode another x_ab2 with a style drawn from b:
             x_ab_rand_ = self.gen_b.decode(c_a)     # translate
-            # x_ab_rand_ = self.gen_b.decode(c_a, s_b_extract)     # translate
             x_ab_rand.append( x_ab_rand_ )
 
             # b to a:
             x_ba_ = self.gen_a.decode(c_b   ) # translate
             c_ba  = self.gen_a.encode(x_ba_ ) # re-encode
 
-            # x_b_recon_ = self.gen_b.decode(c_b, s_b_extract)      # Reconstruct in same domain
-            # x_bab_     = self.gen_b.decode(c_ba, s_b_extract)    # translate back
             x_b_recon_ = self.gen_b.decode(c_b  ) # Reconstruct in same domain
             x_bab_     = self.gen_b.decode(c_ba ) # translate back
 
@@ -371,7 +296,6 @@ class MUNIT_Trainer(nn.Module):
 
         return x_a_original, x_a[:,:3], x_a_recon[:,:3], x_a_recon[:,3:], x_ab, x_aba[:,:3], x_aba[:,3:], \
                x_b, x_b_recon, x_ba[:,:3], x_ba[:,3:], x_bab
-        # return x_a_original, x_a, x_a_recon, x_ab, x_ab_rand, x_aba, x_b, x_b_recon, x_ba, x_bab #We removed all randomness, so x_ab_rand==x_ab exactly (I tested it - it's true. They're identical and therefore redundant)
 
     def sample_a2b(self, x_a, with_grad=False):
         #This code is very similar to self.sample(), except it has a few parts removed for the sake of efficiency.
@@ -435,19 +359,15 @@ class MUNIT_Trainer(nn.Module):
         x_a, _, _ = self.project_texture_pack(x_a)
 
         self.dis_opt.zero_grad()
-        #s_a = Variable(torch.randn(x_a.size(0), self.style_dim, 1, 1).cuda())
-        # s_b = Variable(torch.randn(x_b.size(0), self.style_dim, 1, 1).cuda())
+
         # encode
         c_a = self.gen_a.encode(x_a)
         c_b = self.gen_b.encode(x_b)
 
-        # if random.random() > 0.5:   # With a chance of 1/2, use the style from real image
-        #     s_b = s_b_prime.detach()
-
         # decode (cross domain)
         x_ba = self.gen_a.decode(c_b)
         x_ab = self.gen_b.decode(c_a)
-        # x_ab = self.gen_b.decode(c_a, s_b)
+
         # D loss
         self.loss_dis_a = self.dis_a.calc_dis_loss(x_ba.detach(), x_a)
         self.loss_dis_b = self.dis_b.calc_dis_loss(x_ab.detach(), x_b)
