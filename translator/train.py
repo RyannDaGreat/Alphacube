@@ -24,6 +24,8 @@ parser.add_argument("--resume", action="store_true")
 opts = parser.parse_args()
 
 print("Device:",opts.device)
+print("Config:",opts.config)
+print("Arguments:",opts)
 torch.cuda.set_device(opts.device)
 
 cudnn.benchmark = True
