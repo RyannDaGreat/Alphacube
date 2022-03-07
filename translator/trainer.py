@@ -405,29 +405,36 @@ class MUNIT_Trainer(nn.Module):
 
         hyp=self.hyp
 
+        def torch_load(path):
+            #By default, torch.load might try to load onto GPU
+            #But the thing is, it might use the *wrong* GPU and run out of VRAM
+            #https://discuss.pytorch.org/t/cuda-error-out-of-memory-when-load-models/38011/3
+            #It seems to be a bug. Here's a workaround
+            return torch.load(path,map_location='cpu')
+
         # Load generators
         last_model_name = get_model_list(checkpoint_dir, "gen")
-        state_dict = torch.load(last_model_name)
+        state_dict = torch_load(last_model_name)
         self.gen_a.load_state_dict(state_dict['a'])
         self.gen_b.load_state_dict(state_dict['b'])
         iterations = int(last_model_name[-11:-3])
 
         # Load textures
         last_model_name = get_model_list(checkpoint_dir, "tex")
-        state_dict = torch.load(last_model_name)
+        state_dict = torch_load(last_model_name)
         self.texture_pack.load_state_dict(state_dict['tex'])
 
         if self.trainable:
             # Load discriminators
             last_model_name = get_model_list(checkpoint_dir, "dis")
-            state_dict = torch.load(last_model_name)
+            state_dict = torch_load(last_model_name)
             self.dis_a.load_state_dict(state_dict['a'])
             self.dis_b.load_state_dict(state_dict['b'])
 
             # Load optimizers
             checkpoint_path = os.path.join(checkpoint_dir, 'optimizer.pt')
             if rp.file_exists(checkpoint_path):
-                state_dict = torch.load(checkpoint_path)
+                state_dict = torch_load(checkpoint_path)
                 self.dis_opt.load_state_dict(state_dict['dis'])
                 self.gen_opt.load_state_dict(state_dict['gen'])
                 self.tex_opt.load_state_dict(state_dict['tex'])
