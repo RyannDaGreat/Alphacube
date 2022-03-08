@@ -73,6 +73,7 @@ class MUNIT_Trainer(nn.Module):
 
         if self.trainable:
             lr = hyp.lr
+            tex_lr = hyp.lr * hyp.texture.lr_factor
 
         # Initiate the networks
         self.gen_a = StylelessGen(a_num_channels, hyp.gen)  # auto-encoder for domain a
@@ -94,9 +95,9 @@ class MUNIT_Trainer(nn.Module):
             gen_params = [p for p in gen_params if p.requires_grad]
             tex_params = list(self.texture_pack.parameters())
 
-            self.dis_opt = torch.optim.Adam(dis_params, lr=lr   , betas=(beta1, beta2), weight_decay=hyp.weight_decay)
-            self.gen_opt = torch.optim.Adam(gen_params, lr=lr   , betas=(beta1, beta2), weight_decay=hyp.weight_decay)
-            self.tex_opt = torch.optim.Adam(tex_params, lr=lr*10, betas=(beta1, beta2), weight_decay=hyp.weight_decay)
+            self.dis_opt = torch.optim.Adam(dis_params, lr=lr    , betas=(beta1, beta2), weight_decay=hyp.weight_decay)
+            self.gen_opt = torch.optim.Adam(gen_params, lr=lr    , betas=(beta1, beta2), weight_decay=hyp.weight_decay)
+            self.tex_opt = torch.optim.Adam(tex_params, lr=tex_lr, betas=(beta1, beta2), weight_decay=hyp.weight_decay)
 
             self.dis_scheduler = get_scheduler(self.dis_opt, hyp)
             self.gen_scheduler = get_scheduler(self.gen_opt, hyp)

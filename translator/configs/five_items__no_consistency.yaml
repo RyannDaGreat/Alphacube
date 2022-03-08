@@ -60,7 +60,7 @@ dis:
   activ: lrelu                # activation function [relu/lrelu/prelu/selu/tanh]
   n_layer: 4                  # number of layers in D
   gan_type: lsgan             # GAN loss [lsgan/nsgan]
-  num_scales: 3               # number ofu;es #ARE THESE THE THREE DISCRIMINATORS I SAW IN MUNIT?!?!?
+  num_scales: 3               # number of scales #ARE THESE THE THREE DISCRIMINATORS I SAW IN MUNIT?!?!?
   pad_type: reflect           # padding type [zero/reflect]
 
 # data options
@@ -92,10 +92,10 @@ data_root: ./datasets/five_items   # dataset folder location
 # texture_reality_b2a_w: 0
 
 #PURE TEXTURE REALITY
-texture:multiplier   : 2
-view_consistency_w   : 10
-texture_reality_a2b_w: 3 #5 is too much, 2 isn't enough
-texture_reality_b2a_w: 1.5
+texture:multiplier   : 0
+view_consistency_w   : 0
+texture_reality_a2b_w: 0 #5 is too much, 2 isn't enough
+texture_reality_b2a_w: 0
 batch_size: 2
 #15000 iter
 new_size_min_a: 320               # first (randomly) resize the shortest image side to this size
@@ -103,17 +103,25 @@ new_size_max_a: 320               # first (randomly) resize the shortest image s
 new_size_min_b: 320               # first (randomly) resize the shortest image side to this size
 new_size_max_b: 320               # first (randomly) resize the shortest image side to this size
 image_save_iter: 500        # How often do you want to save output images during training
-#60000 iter
-new_size_min_a: 512               # first (randomly) resize the shortest image side to this size
-new_size_max_a: 512               # first (randomly) resize the shortest image side to this size
-new_size_min_b: 512               # first (randomly) resize the shortest image side to this size
-new_size_max_b: 512               # first (randomly) resize the shortest image side to this size
-#95000 iter
-new_size_min_a: 716               # first (randomly) resize the shortest image side to this size
+##60000 iter
+#new_size_min_a: 512               # first (randomly) resize the shortest image side to this size
+#new_size_max_a: 512               # first (randomly) resize the shortest image side to this size
+#new_size_min_b: 512               # first (randomly) resize the shortest image side to this size
+#new_size_max_b: 512               # first (randomly) resize the shortest image side to this size
+##95000 iter
+#new_size_min_a: 716               # first (randomly) resize the shortest image side to this size
+#new_size_max_a: 716               # first (randomly) resize the shortest image side to this size
+#new_size_min_b: 716               # first (randomly) resize the shortest image side to this size
+#new_size_max_b: 716               # first (randomly) resize the shortest image side to this size
+new_size_min_a: 450               # first (randomly) resize the shortest image side to this size
+new_size_max_a: 450               # first (randomly) resize the shortest image side to this size
+new_size_min_b: 450               # first (randomly) resize the shortest image side to this size
+new_size_max_b: 450               # first (randomly) resize the shortest image side to this size
+#ITER 00164260
 new_size_max_a: 716               # first (randomly) resize the shortest image side to this size
+new_size_min_a: 716               # first (randomly) resize the shortest image side to this size
 new_size_min_b: 716               # first (randomly) resize the shortest image side to this size
 new_size_max_b: 716               # first (randomly) resize the shortest image side to this size
 
 
-
-texture:lr_factor: 10 #This specifies how much faster the texture learning rate is than the generator and discriminator
+texture:lr_factor: 10

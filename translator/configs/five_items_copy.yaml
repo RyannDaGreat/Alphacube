@@ -116,3 +116,5 @@ new_size:a,b:min,max: 500 # first (randomly) resize the shortest image side to t
 #    128: μ=0.29
 
 data_root: ./datasets/five_items   # dataset folder location
+
+texture:lr_factor: 10 #This specifies how much faster the texture learning rate is than the generator and discriminator

@@ -64,3 +64,5 @@ data_root: ./datasets/alphablockL     # dataset folder location
 crop_image_height_translation: 256                      # random crop image of this height
 crop_image_width_translation: 256                       # random crop image of this width
 
+
+texture:lr_factor: 10 #This specifies how much faster the texture learning rate is than the generator and discriminator

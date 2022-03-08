@@ -78,3 +78,5 @@ new_size_max_b: 650               # first (randomly) resize the shortest image s
 #    128: μ=0.29
 
 data_root: ./datasets/sunkist   # dataset folder location
+
+texture:lr_factor: 10 #This specifies how much faster the texture learning rate is than the generator and discriminator
