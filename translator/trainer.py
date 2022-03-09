@@ -447,8 +447,9 @@ class MUNIT_Trainer(nn.Module):
             self.dis_scheduler = get_scheduler(self.dis_opt, hyp, iterations)
             self.gen_scheduler = get_scheduler(self.gen_opt, hyp, iterations)
             self.tex_scheduler = get_scheduler(self.tex_opt, hyp, iterations)
-            print('Resume from iteration %d' % iterations)
-            return iterations
+
+        print('Resume from iteration %d' % iterations)
+        return iterations
 
 
     def save(self, snapshot_dir, iterations):
