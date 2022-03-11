@@ -53,7 +53,6 @@ texture:
 #   enabled: true #If this is false, none of the other segmentation settings matter
 #   batch_size: 5
 
-
 color_loss:
   #Disable color_loss by setting color_loss_w=0
   label_colors:
@@ -65,6 +64,7 @@ color_loss:
     # - [0, 1, 1] # 4 : 200 Soda      Cyan
     # - [0, 0, 0] # 5 : 255 Table     Black
 
+    #COLORS EXTRACTED FROM GROUND TRUTH SEGMENTATION MAP
     - [0.573, 0.54 , 0.496] # 0 : 0   Alphabet
     - [0.433, 0.422, 0.2  ] # 1 : 50  Rubiks
     - [0.717, 0.818, 0.844] # 2 : 100 Garlic
@@ -122,7 +122,7 @@ texture:multiplier   : 2
 view_consistency_w   : 10
 texture_reality_a2b_w: 3 #5 is too much, 2 isn't enough
 texture_reality_b2a_w: 1.5
-batch_size: 2
+batch_size: 5
 ##15000 iter
 #new_size_min_a: 320
 #new_size_max_a: 320
