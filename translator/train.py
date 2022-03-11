@@ -42,16 +42,11 @@ train_loader_a, train_loader_b, test_loader_a, test_loader_b = get_all_data_load
 
 random.seed(1)
 
-train_a = []
-train_b = []
-test_a  = []
-test_b  = []
-
-for i in range(display_size):
-    train_a.append(train_loader_a.dataset[random.randrange(len(train_loader_a.dataset))])
-    train_b.append(train_loader_b.dataset[random.randrange(len(train_loader_b.dataset))])
-    test_a .append(test_loader_a.dataset [random.randrange(len(test_loader_a.dataset ))])
-    test_b .append(test_loader_b.dataset [random.randrange(len(test_loader_b.dataset ))])
+#Select the images used to generate previews
+train_a = rp.random_batch(train_loader_a.dataset, config.display_size)
+train_b = rp.random_batch(train_loader_b.dataset, config.display_size)
+test_a  = rp.random_batch(test_loader_a .dataset, config.display_size)
+test_b  = rp.random_batch(test_loader_b .dataset, config.display_size)
 
 train_display_images_a = torch.stack(train_a).cuda()
 train_display_images_b = torch.stack(train_b).cuda()
