@@ -14,6 +14,7 @@ import torch
 import torch.nn as nn
 
 import upper.source.projector          as projector
+import upper.source.unprojector        as unprojector
 import upper.source.scene_reader       as scene_reader
 import upper.source.view_consistency   as view_consistency
 import upper.source.learnable_textures as learnable_textures
@@ -103,6 +104,11 @@ class MUNIT_Trainer(nn.Module):
             self.gen_scheduler = get_scheduler(self.gen_opt, hyp)
             self.tex_scheduler = get_scheduler(self.tex_opt, hyp)
 
+        if self.hyp.color_loss_w:
+            assert len(self.hyp.color_loss.label_colors) == len(self.hyp.label_values), 'Must have exactly one color per label'
+            self.label_colors = torch.nn.Parameter(torch.Tensor(hyp.color_loss.label_colors), requires_grad=False)
+            print("Using color_loss. self.label_colors.shape: ", self.label_colors.shape)
+
         # Network weight initialization
         if self.trainable:
             self.apply(weights_init(hyp.init))
@@ -165,6 +171,15 @@ class MUNIT_Trainer(nn.Module):
         return x_ab, x_ba
 
 
+    def color_loss(self, scenes, labels):
+        if not self.hyp.color_loss_w:
+            return 0
+
+        num_labels = len(self.hyp.color_loss.label_colors)
+        mean_colors = unprojector.get_label_averge_colors(scenes, labels, num_labels)
+        return ((self.label_colors - mean_colors)**2).mean()
+
+
     def gen_update(self, x_a, x_b):
 
         assert self.trainable, 'This MUNIT_Trainer is not trainable, and does not have optimizers or discriminators etc (to save memory)'
@@ -222,6 +237,10 @@ class MUNIT_Trainer(nn.Module):
         loss_texture_reality_a2b = not hyp.texture_reality_a2b_w or self.recon_criterion(x_ab, x_a [:,:3])
         loss_texture_reality_b2a = not hyp.texture_reality_b2a_w or self.recon_criterion(x_b , x_ba[:,:3])
 
+
+        #Label color loss
+        loss_label_colors = not hyp.color_loss_w or self.color_loss(x_ab, scene_labels)        
+
         #Total loss
         loss_gen_total  = hyp.gan_w                 * loss_gen_adv_a
         loss_gen_total += hyp.gan_w                 * loss_gen_adv_b
@@ -234,8 +253,7 @@ class MUNIT_Trainer(nn.Module):
         loss_gen_total += hyp.view_consistency_w    * loss_view_consistency
         loss_gen_total += hyp.texture_reality_a2b_w * loss_texture_reality_a2b
         loss_gen_total += hyp.texture_reality_b2a_w * loss_texture_reality_b2a
-        
-
+        loss_gen_total += hyp.color_loss_w          * loss_label_colors
 
         loss_gen_total.backward()
 
