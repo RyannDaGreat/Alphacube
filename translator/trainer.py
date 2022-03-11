@@ -122,7 +122,7 @@ class MUNIT_Trainer(nn.Module):
 
         hyp=self.hyp
 
-        scene_uvs, scene_labels = scene_reader.extract_scene_uvs_and_scene_labels(scene_images = x_a         ,
+        scene_uvs, scene_labels = scene_reader.extract_scene_uvs_and_scene_labels(scene_images = x_a             ,
                                                                                   label_values = hyp.label_values)
 
         scene_labels = scene_reader.replace_values(scene_labels, old_labels, new_labels)
@@ -332,6 +332,7 @@ class MUNIT_Trainer(nn.Module):
         return x_a_original, x_a[:,:3], x_a_recon[:,:3], x_a_recon[:,3:], x_ab, x_aba[:,:3], x_aba[:,3:], \
                x_b, x_b_recon, x_ba[:,:3], x_ba[:,3:], x_bab
 
+
     def sample_a2b(self, x_a, with_grad=False):
         #This code is very similar to self.sample(), except it has a few parts removed for the sake of efficiency.
         #If you ever want to modify the functionality of this function, make sure you modify it in self.sample() too
@@ -360,6 +361,7 @@ class MUNIT_Trainer(nn.Module):
 
         return x_ab
 
+
     def sample_b2a(self, x_b, with_grad=False):
         #This function is almost identical to sample_a2b
 
@@ -383,6 +385,7 @@ class MUNIT_Trainer(nn.Module):
         x_ba=(torch.cat(x_ba)+1)/2
 
         return x_ba
+
 
     def dis_update(self, x_a, x_b):
 
@@ -412,12 +415,9 @@ class MUNIT_Trainer(nn.Module):
 
 
     def update_learning_rate(self):
-        if self.dis_scheduler is not None:
-            self.dis_scheduler.step()
-        if self.gen_scheduler is not None:
-            self.gen_scheduler.step()
-        if self.tex_scheduler is not None:
-            self.tex_scheduler.step()
+        if self.dis_scheduler is not None: self.dis_scheduler.step()
+        if self.gen_scheduler is not None: self.gen_scheduler.step()
+        if self.tex_scheduler is not None: self.tex_scheduler.step()
 
 
     def resume(self, checkpoint_dir):
@@ -484,6 +484,3 @@ class MUNIT_Trainer(nn.Module):
         torch.save({'a'  : self.dis_a       .state_dict(), 'b'  : self.dis_b  .state_dict()                                  }, dis_name)
         torch.save({'tex': self.texture_pack.state_dict()                                                                    }, tex_name)
         torch.save({'gen': self.gen_opt     .state_dict(), 'dis': self.dis_opt.state_dict(), 'tex': self.tex_opt.state_dict()}, opt_name)
-
-
-

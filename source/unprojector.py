@@ -304,7 +304,7 @@ def unproject_translations_individually_generator(scene_translations : torch.Ten
                                                  output_width           )
         yield texture, weight
 
-        
+
 def get_label_averge_colors(scene_images: torch.Tensor, scene_labels: torch.Tensor, num_labels:int):
     #Retuns a 2d tensor of colors with shape (len(label_values), scene_images.shape[1])
     #This function is the natural opposite of projector.colorized_scene_labels(...)
