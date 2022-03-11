@@ -112,3 +112,43 @@ def extract_scene_uvs_and_scene_labels(scene_images: torch.Tensor, label_values:
     assert not scene_labels.dtype.is_floating_point
     
     return scene_uvs, scene_labels
+
+
+def extract_seg_photo_rgb_and_labels(seg_photos: torch.Tensor, label_values: list):
+    #Takes images obtained from a .png file (with R,G,B,A) and return two torch tensors
+    #It assumes all values are between [0,1] and that B encodes the label value while 
+    #The alpha channel of these images determines their label
+    #The code in this function is very similar to extract_scene_uvs_and_scene_labels
+    #
+    #label_values is a list of label values, that will be condensed into the range [0,len(label_values)-1]
+
+    #------- Inputs Validation -------
+    
+    assert len(seg_photos.shape)==4, 'Images should be in the form BCHW'
+    assert seg_photos.shape[1]==4, 'Images should have 4 channels (RGBA), but found %i' % seg_photos.shape[4]
+    
+    
+    #------- Outputs Calculation -------
+    
+    r=seg_photos[:,0,:,:]
+    g=seg_photos[:,1,:,:]
+    b=seg_photos[:,2,:,:]
+    a=seg_photos[:,3,:,:]
+    
+    scene_labels=torch.floor(a*256).clamp(min=0,max=255).long()
+    scene_labels=condense_values(scene_labels,label_values)
+    
+    scene_rgb=torch.stack((r,g,b),dim=1)
+    
+    
+    #------- Outputs Validation -------
+    
+    batch_size, num_channels, scene_height, scene_width = seg_photos.shape
+    
+    assert scene_rgb   .shape == (batch_size, 3, scene_height, scene_width)
+    assert scene_labels.shape == (batch_size,    scene_height, scene_width)
+    
+    assert scene_labels.max()<len(label_values) and scene_labels.min()>=0
+    assert not scene_labels.dtype.is_floating_point
+    
+    return scene_rgb, scene_labels
