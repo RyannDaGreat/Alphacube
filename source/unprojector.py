@@ -303,3 +303,54 @@ def unproject_translations_individually_generator(scene_translations : torch.Ten
                                                  output_height          ,
                                                  output_width           )
         yield texture, weight
+
+        
+def get_label_averge_colors(scene_images: torch.Tensor, scene_labels: torch.Tensor, num_labels:int):
+    #Retuns a 2d tensor of colors with shape (len(label_values), scene_images.shape[1])
+    #This function is the natural opposite of projector.colorized_scene_labels(...)
+    #It takes photos or translations, and uses their labels to extract average colors
+    #If for some reason none of the labels contain a given label value, instead of returning NaN, it returns black
+    
+    
+    #------- Inputs Validation -------
+    
+    assert len(scene_images.shape) == 4, 'images should be in the form BCHW'
+    assert len(scene_labels.shape) == 3, 'labels should be in the form BHW'
+    
+    assert scene_labels.shape[0] == scene_images.shape[0], 'images and labels should have same batch size'
+    batch_size = len(scene_labels)
+    
+    assert scene_labels.shape[1] == scene_images.shape[2], 'images and labels should have same height'
+    assert scene_labels.shape[2] == scene_images.shape[3], 'images and labels should have same width'
+    height, width = scene_labels.shape[1:]
+    
+    num_channels = scene_images.shape[1]
+    
+    scene_labels = einops.repeat(scene_labels, 'B H W -> B C H W', C=num_channels)
+    
+    assert scene_labels.shape == scene_images.shape == (batch_size, num_channels, height, width)
+    
+    
+    #------- Outputs Calculation -------
+    
+    output = []
+    for label in range(num_labels):
+        mask = scene_labels==label
+        color_sum = (scene_images * mask).sum(dim=(0,2,3))
+        assert color_sum.shape == (num_channels, )
+        color_mean = color_sum / mask.sum(dim=(0,2,3))
+        output.append(color_mean)
+
+        
+    output = torch.stack(output)
+    
+    #If any labels weren't present, then their mask.sum will be 0, as will their color_sum
+    #That would make their mean_sum a NaN (aka color_sum/mask.sum aka 0/0) 
+    #By default, we will return black
+    output = output.nan_to_num(0)
+        
+    #------- Outputs Validation -------
+    
+    assert output.shape==(num_labels, num_channels)
+    
+    return output
