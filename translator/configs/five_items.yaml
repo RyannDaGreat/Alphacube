@@ -31,20 +31,26 @@ gan_w: 1                      # weight of adversarial loss
 recon_x_w: 10                 # weight of image reconstruction loss
 recon_c_w: 1                  # weight of content reconstruction loss
 recon_x_cyc_w: 10             # weight of explicit style augmented cycle consistency loss
-view_consistency_w: 20 #Used to be called texture_loss_weight
-texture_reality_a2b_w: 2  #Gotta rename this; it controls how much the texture and translations have to match
-texture_reality_b2a_w: 0  #Gotta rename this; its like texture_reality_loss_weight but for photo-to-sim
+view_consistency_w: 20    #Used to be called texture_loss_weight. Disable by setting to 0.
+texture_reality_a2b_w: 2  #Gotta rename this; it controls how much the texture and translations have to match. Disable by setting to 0.
+texture_reality_b2a_w: 0  #Gotta rename this; its like texture_reality_loss_weight but for photo-to-sim. Disable by setting to 0.
+segmentation_w: 10        #This only matters if segmentation:enabled
 
 # Ryan's Hyperparameters for trainer.py
 label_values: [0,50,100,150,200,255]
 
 view_consistency:
-  height,width: 128    #View consistency recovery size
-  version: std         #std or var
+  height,width: 128    #View consistency recovery size. Should be relatively small; we want many collisions to contribute to a std.
+  version: std         #std or var. It doens't seem to make much difference either way, but std is easier to visualize in the tutorial ipynb.
 
 texture:
   height,width: 256    #Height and width of the learned texture, in pixels
   multiplier: 1        #0 effectively disables the texture. 1 is the minimum value to cover all colors. Larger values give the texture more control (recall this texture is residual)
+  lr_factor: 10        #This specifies how much faster the texture learning rate is than the generator and discriminator
+
+segmentation:
+  enabled: true #If this is false, none of the other segmentation settings matter
+  batch_size: 5
 
 # model options
 gen:
@@ -97,23 +103,19 @@ view_consistency_w   : 10
 texture_reality_a2b_w: 3 #5 is too much, 2 isn't enough
 texture_reality_b2a_w: 1.5
 batch_size: 2
-#15000 iter
-new_size_min_a: 320               # first (randomly) resize the shortest image side to this size
-new_size_max_a: 320               # first (randomly) resize the shortest image side to this size
-new_size_min_b: 320               # first (randomly) resize the shortest image side to this size
-new_size_max_b: 320               # first (randomly) resize the shortest image side to this size
-image_save_iter: 500        # How often do you want to save output images during training
-#60000 iter
-new_size_min_a: 512               # first (randomly) resize the shortest image side to this size
-new_size_max_a: 512               # first (randomly) resize the shortest image side to this size
-new_size_min_b: 512               # first (randomly) resize the shortest image side to this size
-new_size_max_b: 512               # first (randomly) resize the shortest image side to this size
-#95000 iter
-new_size_min_a: 716               # first (randomly) resize the shortest image side to this size
-new_size_max_a: 716               # first (randomly) resize the shortest image side to this size
-new_size_min_b: 716               # first (randomly) resize the shortest image side to this size
-new_size_max_b: 716               # first (randomly) resize the shortest image side to this size
-
-
-
-texture:lr_factor: 10 #This specifies how much faster the texture learning rate is than the generator and discriminator
+##15000 iter
+#new_size_min_a: 320
+#new_size_max_a: 320
+#new_size_min_b: 320
+#new_size_max_b: 320
+#image_save_iter: 500
+##60000 iter
+#new_size_min_a: 512
+#new_size_max_a: 512
+#new_size_min_b: 512
+#new_size_max_b: 512
+##95000 iter
+#new_size_min_a: 716
+#new_size_max_a: 716
+#new_size_min_b: 716
+#new_size_max_b: 716
