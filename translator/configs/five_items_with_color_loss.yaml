@@ -48,6 +48,8 @@ texture:
   height,width: 256    #Height and width of the learned texture, in pixels
   multiplier: 1        #0 effectively disables the texture. 1 is the minimum value to cover all colors. Larger values give the texture more control (recall this texture is residual)
   lr_factor: 10        #This specifies how much faster the texture learning rate is than the generator and discriminator
+  fourier:
+    scale: 10
 
 # segmentation:
 #   enabled: true #If this is false, none of the other segmentation settings matter
@@ -130,12 +132,6 @@ new_size_max_a: 320
 new_size_min_b: 320
 new_size_max_b: 320
 ##60000 iter
-new_size_min_a: 512
-new_size_max_a: 512
-new_size_min_b: 512
-new_size_max_b: 512
-lr: 0.000011                    # initial learning rate lr_policy: step ### LEAVE THIS ALONE OR IT MIGHT NOT CONVERGE (even 10x is bad)
-view_consistency_w   : 0
 #new_size_min_a: 512
 #new_size_max_a: 512
 #new_size_min_b: 512

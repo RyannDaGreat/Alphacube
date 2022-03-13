@@ -53,7 +53,8 @@ class MUNIT_Trainer(nn.Module):
         self.texture_pack = learnable_textures.LearnableTexturePackFourier(
             height=hyp.texture.height, 
             width =hyp.texture.width, 
-            num_textures=len(hyp.label_values)
+            num_textures=len(hyp.label_values),
+            scale=hyp.texture.fourier.scale,
         )
 
         a_num_channels = hyp.input_dim_a#+self.texture_pack.num_channels
