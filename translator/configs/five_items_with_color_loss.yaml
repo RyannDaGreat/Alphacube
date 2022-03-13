@@ -35,7 +35,7 @@ view_consistency_w: 20     # Used to be called texture_loss_weight. Disable by s
 texture_reality_a2b_w: 2   # Gotta rename this; it controls how much the texture and translations have to match. Disable by setting to 0.
 texture_reality_b2a_w: 0   # Gotta rename this; its like texture_reality_loss_weight but for photo-to-sim. Disable by setting to 0.
 # segmentation_w: 10       # This only matters if segmentation:enabled
-color_loss_w: 100          # Set to 0 to disable color_loss
+color_loss_w: 20          # Set to 0 to disable color_loss
 
 # Ryan's Hyperparameters for trainer.py
 label_values: [0,50,100,150,200,255]
@@ -123,12 +123,19 @@ view_consistency_w   : 10
 texture_reality_a2b_w: 3 #5 is too much, 2 isn't enough
 texture_reality_b2a_w: 1.5
 batch_size: 5
-##15000 iter
-#new_size_min_a: 320
-#new_size_max_a: 320
-#new_size_min_b: 320
-#new_size_max_b: 320
+color_loss_w: 2.5          # Set to 0 to disable color_loss
+#28000 iter
+new_size_min_a: 320
+new_size_max_a: 320
+new_size_min_b: 320
+new_size_max_b: 320
 ##60000 iter
+new_size_min_a: 512
+new_size_max_a: 512
+new_size_min_b: 512
+new_size_max_b: 512
+lr: 0.000011                    # initial learning rate lr_policy: step ### LEAVE THIS ALONE OR IT MIGHT NOT CONVERGE (even 10x is bad)
+view_consistency_w   : 0
 #new_size_min_a: 512
 #new_size_max_a: 512
 #new_size_min_b: 512

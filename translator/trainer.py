@@ -172,11 +172,14 @@ class MUNIT_Trainer(nn.Module):
 
 
     def color_loss(self, scenes, labels):
+        #Assumes scenes are in the range [-1,1] and label_colors are in the range [0,1]
+        
         if not self.hyp.color_loss_w:
             return 0
 
         num_labels = len(self.hyp.color_loss.label_colors)
         mean_colors = unprojector.get_label_averge_colors(scenes, labels, num_labels)
+        mean_colors = (mean_colors + 1)/2 #[-1,1] to [0,1]
         return ((self.label_colors - mean_colors)**2).mean()
 
 
@@ -190,6 +193,8 @@ class MUNIT_Trainer(nn.Module):
         #Because precise=True, x_a should be in the range (0,1) and x_b should be in the range (-1,1) because precise=False for that domain (see utils.py)
 
         x_a, scene_uvs, scene_labels = self.project_texture_pack(x_a)
+
+        #Now, after self.project_texture_pack, x_a is in the range (-1,1)
 
         self.tex_opt.zero_grad()
         self.gen_opt.zero_grad()
