@@ -118,8 +118,9 @@ color_loss_w: 0          # Set to 0 to disable color_loss
 batch_size: 2
 texture:fourier:scale: 15
 #0 iter
-view_consistency_w   : 0
-texture:multiplier   : 2
+batch_size: 10
+view_consistency_w   : 10
+texture:multiplier   : 10
 texture_reality_a2b_w: 3 #5 is too much, 2 isn't enough
 texture_reality_b2a_w: 1.5
 crop_image_height: 128            # random crop image of this height
@@ -128,6 +129,8 @@ new_size_min_a: 128
 new_size_max_a: 128
 new_size_min_b: 128
 new_size_max_b: 128
+n_downsample: 3             # number of downsampling layers in content encoder #I want to set this to 3 but I run out of VRAM....
+num_scales: 4               # number ofu;es #ARE THESE THE THREE DISCRIMINATORS I SAW IN MUNIT?!?!?
 ##?0000 iter
 #new_size_min_a: 512
 #new_size_max_a: 512
