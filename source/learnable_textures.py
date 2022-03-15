@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import numpy as np
+import einops
 import rp
 
 
@@ -183,6 +184,7 @@ class LearnableImageFourier(LearnableImage):
                  num_features:int=128 , # Number of fourier features per coordinate
                  scale       :int=10  , # Magnitude of the initial feature noise
                 ):
+        #TODO: Make resolution changeable mid-training. Right now it's saved into the state...and it cant be changed mid-training.
         #An image paramterized by a fourier features fed into an MLP
         #The possible output range of these images is between 0 and 1
         #In other words, no pixel will ever have a value <0 or >1
@@ -209,20 +211,46 @@ class LearnableImageFourier(LearnableImage):
                 nn.Sigmoid(),
             )
     
+    def get_features(self, condition=None):
+        #TODO: Don't keep this! Condition should be CONATENATED! Not replacing features...this is just for testing...
+
+        features = self.features
+
+        assert features.shape == (1, 2*self.num_features, self.height, self.width), features.shape
+
+        if condition is not None:
+            #Replace the first n features with the condition, where n = len(condition)
+            assert isinstance(condition, torch.Tensor)
+            assert condition.device == self.features.device
+            assert len(condition.shape)==1, 'Condition should be a vector'
+            assert len(condition)<=2*self.num_features
+            features = features.clone()
+            features = einops.rearrange(features, 'B C H W -> B H W C')
+            features[..., :len(condition)] = condition
+            features = einops.rearrange(features, 'B H W C -> B C H W')
+
+        assert features.shape == (1, 2*self.num_features, self.height, self.width)
+
+        return features
+        
+
+    def forward(self, condition=None):
+        # Return all the images we've learned
+
+        features = self.get_features(condition)
+
+        output = self.model(features).squeeze(0)
+        
+        assert output.shape==(self.num_channels, self.height, self.width)
+        
+        return output
+    
     #def project(self,uv_maps):
     #    #TODO: Check if this function works well...
     #    #Right now consider it untested
     #    assert len(uv_maps.shape)==(4), 'uv_maps should be BCHW'
     #    assert uv_maps.shape[1]==2, 'Should have two channels: u,v'
     #    return self.model(self.feature_extractor(uv_maps))
-    
-    def forward(self):
-        # Return all the images we've learned
-        output = self.model(self.features).squeeze(0)
-        
-        assert output.shape==(self.num_channels, self.height, self.width)
-        
-        return output
     
     
 ###############################
