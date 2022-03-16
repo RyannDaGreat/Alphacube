@@ -147,12 +147,12 @@ class MUNIT_Trainer(nn.Module):
         #SIMPLE:
         x_a=x_a*2-1
 
-        content = x_a+0 #Might replace with better content later
+        hint = x_a+0 #Might replace with better content later
 
         #RESIDUAL:
-        x_a = x_a + (scene_projections-1/2)*2#let's try to minimize effort right now...let's just use 3 channels for visualization etc... todo make all 6:
+        x_a = hint*hyp.texture.hint.multiplier + (scene_projections-1/2)*2#let's try to minimize effort right now...let's just use 3 channels for visualization etc... todo make all 6:
 
-        x_a = torch.cat((x_a,content),dim=1)#BCHW
+        x_a = torch.cat((x_a,hint),dim=1)#BCHW
 
         return x_a, scene_uvs, scene_labels
 
