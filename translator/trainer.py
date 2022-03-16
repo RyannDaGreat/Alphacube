@@ -21,20 +21,21 @@ import upper.source.learnable_textures as learnable_textures
 
 import rp
 
-#Use the following two arrays to permute label values...
-# old_labels=[0,1,2,3,4,5]
-# new_labels=[2,0,3,1,4,5]
-old_labels=[]
-new_labels=[]
-# 0 Alphabet: 0
-# 1 Rubiks: 50
-# 2 Garlic: 100
-# 3 Apple: 150
-# 4 Soda: 200
-# 5 Table: 255
+##Twisty BS:
+#    Use the following two arrays to permute label values...
+#     old_labels=[0,1,2,3,4,5]
+#     new_labels=[2,0,3,1,4,5]
+#    old_labels=[]
+#    new_labels=[]
+#     0 Alphabet: 0
+#     1 Rubiks: 50
+#     2 Garlic: 100
+#     3 Apple: 150
+#     4 Soda: 200
+#     5 Table: 255
+#     old_labels=torch.tensor(old_labels)
+#     new_labels=torch.tensor(new_labels)
 
-old_labels=torch.tensor(old_labels)
-new_labels=torch.tensor(new_labels)
 
 class MUNIT_Trainer(nn.Module):
     def __init__(self, hyperparameters, trainable=True):
@@ -126,7 +127,8 @@ class MUNIT_Trainer(nn.Module):
         scene_uvs, scene_labels = scene_reader.extract_scene_uvs_and_scene_labels(scene_images = x_a             ,
                                                                                   label_values = hyp.label_values)
 
-        scene_labels = scene_reader.replace_values(scene_labels, old_labels, new_labels)
+        #Twisty BS:
+        # scene_labels = scene_reader.replace_values(scene_labels, old_labels, new_labels)
 
         texture_pack  = self.texture_pack()
         texture_pack *= hyp.texture.multiplier
@@ -138,8 +140,9 @@ class MUNIT_Trainer(nn.Module):
         scene_projections = projector.project_textures(scene_uvs, scene_labels, texture_pack)
 
 
-        x_a_blue = scene_reader.replace_values(scene_labels, torch.tensor(list(range(len(hyp.label_values)))), torch.tensor(hyp.label_values) )
-        x_a[:, 2] = x_a_blue / 255
+        #Twisty BS:
+        # x_a_blue = scene_reader.replace_values(scene_labels, torch.tensor(list(range(len(hyp.label_values)))), torch.tensor(hyp.label_values) )
+        # x_a[:, 2] = x_a_blue / 255
 
         #SIMPLE:
         x_a=x_a*2-1
