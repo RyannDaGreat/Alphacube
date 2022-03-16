@@ -47,6 +47,7 @@ view_consistency:
 texture:
   height,width: 256    #Height and width of the learned texture, in pixels
   multiplier: 1        #0 effectively disables the texture. 1 is the minimum value to cover all colors. Larger values give the texture more control (recall this texture is residual)
+  residual_multiplier: 1 #How much we add UVL to the texture. 
   lr_factor: 10        #This specifies how much faster the texture learning rate is than the generator and discriminator
   fourier:
     scale: 10
