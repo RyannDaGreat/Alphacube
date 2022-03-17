@@ -146,13 +146,15 @@ class MUNIT_Trainer(nn.Module):
         # scene_labels = scene_reader.replace_values(scene_labels, old_labels, new_labels)
 
         texture_pack  = self.texture_pack()
+        texture_pack  = (texture_pack - 1/2) * 2 # [0,1] to [-1,1]
         texture_pack *= hyp.texture.multiplier
 
         if not hyp.texture.multiplier:
-            #Save some time on the backwards pass
+            #Instead of multiplying by 0 and keeping track of that gradient, save some time on the backwards pass
+            #(0 times anything is 0)
             texture_pack = torch.zeros_like(texture_pack)
 
-        scene_projections = projector.project_textures(scene_uvs, scene_labels, texture_pack)
+        scene_projections = projector.project_textures(scene_uvs, scene_labels, texture_pack) # Range of values: [-1, 1]
 
 
         #Twisty BS:
@@ -165,7 +167,7 @@ class MUNIT_Trainer(nn.Module):
         hint = x_a+0 #Might replace with better content later
 
         #RESIDUAL:
-        x_a = hint*hyp.texture.hint.multiplier + (scene_projections-1/2)*2#let's try to minimize effort right now...let's just use 3 channels for visualization etc... todo make all 6:
+        x_a = hint*hyp.texture.hint.multiplier + scene_projections #let's try to minimize effort right now...let's just use 3 channels for visualization etc... todo make all 6:
 
         x_a = torch.cat((x_a,hint),dim=1)#BCHW
 
