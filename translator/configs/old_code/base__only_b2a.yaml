@@ -49,7 +49,6 @@ texture:
   multiplier: 1        #0 effectively disables the texture. 1 is the minimum value to cover all colors. Larger values give the texture more control (recall this texture is residual)
   hint:multiplier: 1   #How much we add UVL or other non-learned hints to the texture.
   lr_factor: 10        #This specifies how much faster the texture learning rate is than the generator and discriminator
-  type: fourier        #Choices: fourier, raster, mlp
   fourier:
     scale: 10
 
@@ -129,6 +128,13 @@ texture_reality_a2b_w: 3 #5 is too much, 2 isn't enough
 texture_reality_b2a_w: 1.5
 batch_size: 5
 color_loss_w: 20          # Set to 0 to disable color_loss
+
+texture:multiplier      : 2
+texture:hint:multiplier : 0
+view_consistency_w   : 0
+texture_reality_a2b_w: 0 #5 is too much, 2 isn't enough
+texture_reality_b2a_w: 3
+
 #28000 iter
 new_size_min_a: 320
 new_size_max_a: 320

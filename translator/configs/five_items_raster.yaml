@@ -124,6 +124,7 @@ data_root: ./datasets/five_items   # dataset folder location
 #PURE TEXTURE REALITY
 texture:multiplier      : 2
 texture:hint:multiplier : 0
+texture:type: raster
 view_consistency_w   : 10
 texture_reality_a2b_w: 3 #5 is too much, 2 isn't enough
 texture_reality_b2a_w: 1.5

@@ -48,15 +48,30 @@ class MUNIT_Trainer(nn.Module):
         else:
             self.trainable=False
 
-        hyp=self.hyp=hyp=hyperparameters
+        hyp=self.hyp=hyperparameters
 
-        #TODO: Connect the config to change the height, width, num_channels etc of the learnable textures
-        self.texture_pack = learnable_textures.LearnableTexturePackFourier(
-            height=hyp.texture.height, 
-            width =hyp.texture.width, 
-            num_textures=len(hyp.label_values),
-            scale=hyp.texture.fourier.scale,
-        )
+
+        #Create the learnable texture
+        assert hyp.texture.type in 'fourier mlp raster', repr(hyp.texture.type)+' is not a supported type of learnable texture'
+
+        if hyp.texture.type == 'fourier':
+            self.texture_pack = learnable_textures.LearnableTexturePackFourier(
+                height=hyp.texture.height, 
+                width =hyp.texture.width, 
+                num_textures=len(hyp.label_values),
+                scale=hyp.texture.fourier.scale,
+            )
+
+        elif hyp.texture.type == 'mlp':
+            assert False, 'Not yet implemented'
+
+        elif hyp.texture.type == 'raster':
+            self.texture_pack = learnable_textures.LearnableTexturePackRaster(
+                height=hyp.texture.height, 
+                width =hyp.texture.width, 
+                num_textures=len(hyp.label_values),
+            )
+
 
         a_num_channels = hyp.input_dim_a#+self.texture_pack.num_channels
         b_num_channels = hyp.input_dim_b
