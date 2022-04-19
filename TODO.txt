@@ -1,6 +1,12 @@
+
+For future reference, here's the command I use to train things: python3 train.py --config configs/three_synth_base.yaml --output_path trained_models --resume 
+
+Can I use 3d position + uv + normals (all local) as multi-channel input to the texture network? They can all be projected back onto a texture afterwards...but it might help it reconcile really difficult sparse UVs like the chest
+
 VERY IMPORTANT TEST: ROBUSTNESS
     What if the camera moves? What if the lighting changes?
     What if we want a first person robot to push a block into a goal?
+
 NEW TESTS:
     Robot jetson bot.
     We can do Jinghuan's experiment (multiview) with this! Can we try that?
@@ -8,6 +14,10 @@ NEW TESTS:
 
 QUESTIONS:
     If we use only recon_texture_reality_loss_weight will it effectively make texture_reality_loss_weight work? (If not it means the latents aren't tangled enough)
+
+TODO:
+    Learn from BARF's codebase. Its really nice!
+    Create animations of training process - especially side-by-side ones. What does raster vs fourier look like, for example?
 
 THINGS TO FIX FOR CLUSTER:
     Better config handling
