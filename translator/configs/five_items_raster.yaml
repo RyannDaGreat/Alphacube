@@ -122,14 +122,15 @@ data_root: ./datasets/five_items   # dataset folder location
 # texture_reality_b2a_w: 0
 
 #PURE TEXTURE REALITY
-texture:multiplier      : 2
-texture:hint:multiplier : 0
+texture:multiplier      : .5 #UNLIKE fourier textures, raster textures are NOT bounded between 0 and 1 - they have no sigmoid at the en
+texture:hint:multiplier : .5
 texture:type: raster
-view_consistency_w   : 10
+view_consistency_w   : 0
 texture_reality_a2b_w: 3 #5 is too much, 2 isn't enough
-texture_reality_b2a_w: 1.5
+texture_reality_b2a_w: 0
 batch_size: 5
 color_loss_w: 20          # Set to 0 to disable color_loss
+texture:lr_factor: 10        #This specifies how much faster the texture learning rate is than the generator and discriminator
 #28000 iter
 new_size_min_a: 320
 new_size_max_a: 320

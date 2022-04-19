@@ -135,7 +135,7 @@ class LearnableImageRaster(LearnableImage):
         self.image=nn.Parameter(torch.rand(num_channels,height,width))
         
     def forward(self):
-        output = self.image
+        output = self.image.clone()
         
         assert output.shape==(self.num_channels, self.height, self.width)
         
