@@ -236,16 +236,16 @@ class MUNIT_Trainer(nn.Module):
         c_a_recon = self.gen_b.encode(x_ab)
 
         # decode again (if needed)
-        x_aba = self.gen_a.decode(c_a_recon)            if hyp.recon_x_cyc_w > 0 else None
-        x_bab = self.gen_b.decode(c_b_recon)            if hyp.recon_x_cyc_w > 0 else None
+        x_aba = self.gen_a.decode(c_a_recon)                         if hyp.recon_x_cyc_w > 0 else None
+        x_bab = self.gen_b.decode(c_b_recon)                         if hyp.recon_x_cyc_w > 0 else None
 
         # reconstruction loss
+        loss_gen_cycrecon_x_a = self.recon_criterion(x_aba    , x_a) if hyp.recon_x_cyc_w > 0 else 0
+        loss_gen_cycrecon_x_b = self.recon_criterion(x_bab    , x_b) if hyp.recon_x_cyc_w > 0 else 0
         loss_gen_recon_x_a    = self.recon_criterion(x_a_recon, x_a)
         loss_gen_recon_x_b    = self.recon_criterion(x_b_recon, x_b)
         loss_gen_recon_c_a    = self.recon_criterion(c_a_recon, c_a)
         loss_gen_recon_c_b    = self.recon_criterion(c_b_recon, c_b)
-        loss_gen_cycrecon_x_a = self.recon_criterion(x_aba    , x_a) if hyp.recon_x_cyc_w > 0 else 0
-        loss_gen_cycrecon_x_b = self.recon_criterion(x_bab    , x_b) if hyp.recon_x_cyc_w > 0 else 0
 
         # GAN loss
         loss_gen_adv_a = self.dis_a.calc_gen_loss(x_ba)
@@ -295,7 +295,7 @@ class MUNIT_Trainer(nn.Module):
         self.loss_gen_recon_c_b    = loss_gen_recon_c_b   .item()
         self.loss_gen_cycrecon_x_a = loss_gen_cycrecon_x_a.item()
         self.loss_gen_cycrecon_x_b = loss_gen_cycrecon_x_b.item()
-        self.loss_gen_total = loss_gen_total.item()
+        self.loss_gen_total        = loss_gen_total       .item()
 
 
     def sample(self, x_a, x_b, with_grad=False):
@@ -322,38 +322,38 @@ class MUNIT_Trainer(nn.Module):
 
             c_b= self.gen_b.encode(x_b_)
 
-            x_ab_          = self.gen_b.decode(c_a   ) # translate
-            c_ab           = self.gen_b.encode(x_ab_ ) # re-encode
-            x_aba_         = self.gen_a.decode(c_ab  ) # translate back
+            x_ab_  = self.gen_b.decode(c_a  ) # translate
+            c_ab   = self.gen_b.encode(x_ab_) # re-encode
+            x_aba_ = self.gen_a.decode(c_ab ) # translate back
 
-            x_a_recon.append(x_a_recon_ )
-            x_ab     .append(x_ab_      )
-            x_aba    .append(x_aba_     )
+            x_a_recon.append(x_a_recon_)
+            x_ab     .append(x_ab_     )
+            x_aba    .append(x_aba_    )
 
             # Encode another x_ab2 with a style drawn from b:
             x_ab_rand_ = self.gen_b.decode(c_a)     # translate
             x_ab_rand.append( x_ab_rand_ )
 
             # b to a:
-            x_ba_ = self.gen_a.decode(c_b   ) # translate
-            c_ba  = self.gen_a.encode(x_ba_ ) # re-encode
+            x_ba_ = self.gen_a.decode(c_b  ) # translate
+            c_ba  = self.gen_a.encode(x_ba_) # re-encode
 
-            x_b_recon_ = self.gen_b.decode(c_b  ) # Reconstruct in same domain
-            x_bab_     = self.gen_b.decode(c_ba ) # translate back
+            x_b_recon_ = self.gen_b.decode(c_b ) # Reconstruct in same domain
+            x_bab_     = self.gen_b.decode(c_ba) # translate back
 
             x_b_recon.append(x_b_recon_)
-            x_ba     .append(x_ba_)
-            x_bab    .append(x_bab_)
+            x_ba     .append(x_ba_     )
+            x_bab    .append(x_bab_    )
 
-        x_a       =(x_a+1)/2
-        x_b       =(x_b+1)/2
-        x_ba      =(torch.cat(x_ba     )+1)/2
-        x_ab      =(torch.cat(x_ab     )+1)/2
-        x_bab     =(torch.cat(x_bab    )+1)/2
-        x_aba     =(torch.cat(x_aba    )+1)/2
-        x_a_recon =(torch.cat(x_a_recon)+1)/2
-        x_b_recon =(torch.cat(x_b_recon)+1)/2
-        x_ab_rand =(torch.cat(x_ab_rand)+1)/2
+        x_a       = (x_a+1)/2
+        x_b       = (x_b+1)/2
+        x_ba      = (torch.cat(x_ba     )+1)/2
+        x_ab      = (torch.cat(x_ab     )+1)/2
+        x_bab     = (torch.cat(x_bab    )+1)/2
+        x_aba     = (torch.cat(x_aba    )+1)/2
+        x_a_recon = (torch.cat(x_a_recon)+1)/2
+        x_b_recon = (torch.cat(x_b_recon)+1)/2
+        x_ab_rand = (torch.cat(x_ab_rand)+1)/2
 
         return x_a_original, x_a[:,:3], x_a_recon[:,:3], x_a_recon[:,3:], x_ab, x_aba[:,:3], x_aba[:,3:], \
                x_b, x_b_recon, x_ba[:,:3], x_ba[:,3:], x_bab
