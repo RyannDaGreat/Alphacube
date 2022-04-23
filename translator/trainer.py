@@ -72,6 +72,11 @@ class MUNIT_Trainer(nn.Module):
                 num_textures=len(hyp.label_values),
             )
 
+        if not self.trainable:
+            #If we're not going to train anything, memoize the texture so we don't recalculate it repeatedly
+            #Especially with fourier textures, this should speed things up significantly during inference...
+            #TODO: Profile this! See if this truly makes it faster (it should, but I don't know by how much!)
+            self.texture_pack.forward = rp.memoized(self.texture_pack.forward)
 
         a_num_channels = hyp.input_dim_a#+self.texture_pack.num_channels
         b_num_channels = hyp.input_dim_b
