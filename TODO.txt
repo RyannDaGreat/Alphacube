@@ -1,7 +1,18 @@
+NEXT GEN (VERY GOOD IDEA):
+    XYZ+View Angle (same as nerf) --> RGB as translator (basically neural radiance on the surface of the mesh). Then we use ONLY texture reality loss and NOT view consistency loss (because texture reality loss won't penalize it for any shinyness predicted by the radiance).
+        We might benefit from learning normal maps on the object as well! In theory, letting it edit the XYZ positions of the objects could also be used to deform them...but this is confiusing to me so fuck it for even the next gen lol
+    In addition, we also have XYZ+View Angle+Shadow Intensity from a sky-dome of variable bright lights made in blender. The brightness of each light in RGB (or maybe even more channels? Idk) is controlled by a XYZ->RGB network. This input is all before the image translator step.
+    Cons:
+        This will be slower. Still paralleleizable more than robots irl though...
+        During infererence, we can't rasterize the textures because its a radiance thing...
+
+Check out that paper that modified nerf to make better shiny things (it was a harvard paper on youtube)
 
 For future reference, here's the command I use to train things: python3 train.py --config configs/three_synth_base.yaml --output_path trained_models --resume 
 
 Can I use 3d position + uv + normals (all local) as multi-channel input to the texture network? They can all be projected back onto a texture afterwards...but it might help it reconcile really difficult sparse UVs like the chest
+
+
 
 VERY IMPORTANT TEST: ROBUSTNESS
     What if the camera moves? What if the lighting changes?
@@ -14,6 +25,13 @@ NEW TESTS:
 
 QUESTIONS:
     If we use only recon_texture_reality_loss_weight will it effectively make texture_reality_loss_weight work? (If not it means the latents aren't tangled enough)
+
+
+Better shadows:
+    * Per-frame view consistency among multiple cameras to get more consistent shadows? Use Jinghuan's 3d fusion method?
+    * Texture reality loss should be lighting invariant in the same way that view consistency loss is!
+    * add depth map inputs, at LEAST to synthetic data!
+        * Umbrella of variably bright light dome in blender plus xyz->brightness function to control them all...this is probably the best method but also the most annoying...
 
 TODO:
     Learn from BARF's codebase. Its really nice!
