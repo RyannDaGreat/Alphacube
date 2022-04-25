@@ -3,7 +3,7 @@
 import torch
 import torch.nn.functional as F
 from math import exp
-import numpy as np
+import rp
 
 
 def gaussian(window_size, sigma):
@@ -172,3 +172,16 @@ class MSSSIM(torch.nn.Module):
     def forward(self, img1, img2):
         # TODO: store window between calls if possible
         return msssim(img1, img2, window_size=self.window_size, size_average=self.size_average)
+
+def numpy_msssim(img1, img2, **kwargs):
+    #Used to find msssim between two numpy images
+    #All kwargs are passed to msssim()
+    
+    assert rp.is_rgb_image(img1)
+    assert rp.is_rgb_image(img2)
+    
+    #Use MSSSIM on numpy images
+    img1 = rp.as_torch_image(img1)[None]
+    img2 = rp.as_torch_image(img2)[None]
+
+    return float(msssim(img1, img2, **kwargs))
