@@ -1,9 +1,10 @@
 # From https://github.com/jorge-pessoa/pytorch-msssim. Licensed under MIT License.
 
+from math import exp
+
+import rp
 import torch
 import torch.nn.functional as F
-from math import exp
-import rp
 
 
 def gaussian(window_size, sigma):
@@ -72,7 +73,8 @@ def ssim(img1, img2, window_size=11, window=None, size_average=True, full=False,
 
 _weights_cache={}
 def _get_weights(device):
-    #I found in my profiler that the Tensor.to() function took the majority of the time in the msssim function
+    #I found in my profiler that the Tensor.to() function took the majority of the time in the msssim function. 
+    #This is probably because it used to move a small tensor from CPU to GPU at every call.
 
     #BEFORE THIS CHANGE:
     #    22.401 exeval  r.py:6625
@@ -106,7 +108,6 @@ def _get_weights(device):
         _weights_cache[device]=weights
     return _weights_cache[device]
 
-    
 
 def msssim(img1, img2, window_size=11, size_average=True, val_range=None, normalize=False):
     device = img1.device
@@ -162,6 +163,7 @@ class SSIM(torch.nn.Module):
 
         return ssim(img1, img2, window=window, window_size=self.window_size, size_average=self.size_average)
 
+
 class MSSSIM(torch.nn.Module):
     def __init__(self, window_size=11, size_average=True, channel=3):
         super(MSSSIM, self).__init__()
@@ -173,13 +175,14 @@ class MSSSIM(torch.nn.Module):
         # TODO: store window between calls if possible
         return msssim(img1, img2, window_size=self.window_size, size_average=self.size_average)
 
+
 def numpy_msssim(img1, img2, **kwargs):
     #Used to find msssim between two numpy images
     #All kwargs are passed to msssim()
-    
+
     assert rp.is_rgb_image(img1)
     assert rp.is_rgb_image(img2)
-    
+
     #Use MSSSIM on numpy images
     img1 = rp.as_torch_image(img1)[None]
     img2 = rp.as_torch_image(img2)[None]
