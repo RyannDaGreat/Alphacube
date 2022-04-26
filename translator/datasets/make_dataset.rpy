@@ -4,8 +4,8 @@ def make_dataset(name,fake_dir,real_dir):
     assert directory_exists(fake_dir)
     assert directory_exists(real_dir)
     
-    fake_dir=get_absolute_path(fake_dir)
-    real_dir=get_absolute_path(real_dir)
+    #fake_dir=get_absolute_path(fake_dir)
+    #real_dir=get_absolute_path(real_dir)
 
     make_directory(name)
     set_current_directory(name)
