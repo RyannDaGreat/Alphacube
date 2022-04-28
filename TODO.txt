@@ -1,3 +1,10 @@
+NOTE: Cyclegan seems to be more receptive to hints! It preserves more low level features. This is as advertised: munit claims to do large global transforms like cat to dog. Cyclegan has skip connections in its u-net allowing it to transfer high frequency features...maybe this is why? In either case it succesfully matches the chest and barrel etc in the five_synth dataset. It does this well. But it doesn't do the five_items dataset well: rubiks cube is still sometimes an apple. I think this is because MUNIT is less sensitive to hints than cyclegan is, and because in five_items its genuinely ambiguous, it didn't do it much favots. 
+
+
+TODO:
+    Schedule via a script that will append things to config over and over again. 
+    Also make config copies get saved when a checkpoint is saved.
+
 NEXT GEN (VERY GOOD IDEA):
     XYZ+View Angle (same as nerf) --> RGB as translator (basically neural radiance on the surface of the mesh). Then we use ONLY texture reality loss and NOT view consistency loss (because texture reality loss won't penalize it for any shinyness predicted by the radiance).
         We might benefit from learning normal maps on the object as well! In theory, letting it edit the XYZ positions of the objects could also be used to deform them...but this is confiusing to me so fuck it for even the next gen lol
