@@ -39,7 +39,7 @@ color_loss_w: 20          # Set to 0 to disable color_loss
 
 # Ryan's Hyperparameters for trainer.py
 # label_values: [0,50,100,150,200,255] #For 5 items
-# label_values: [0,75,150,255] #For 3 items
+label_values: [0,75,150,255] #For 3 items
 
 view_consistency:
   height,width: 128    #View consistency recovery size. Should be relatively small; we want many collisions to contribute to a std.
@@ -112,7 +112,7 @@ new_size_max_b: 256               # first (randomly) resize the shortest image s
 #     64: μ=0.1981049444,  σ=0.0281622
 #    128: μ=0.29
 
-# data_root: ./datasets/three_synth   # dataset folder location
+data_root: ./datasets/five_synth   # dataset folder location
 
 #VARIANTS:
 
@@ -130,8 +130,6 @@ texture:
   fourier:
     scale: 15
 
-label_values: [0,50,100,150,200,255] #For 5 items
-data_root: ./datasets/five_synth   # dataset folder location
 
 #PURE TEXTURE REALITY
 texture:multiplier      : 0
@@ -143,10 +141,9 @@ batch_size: 5
 color_loss_w: 0          # Set to 0 to disable color_loss
 
 ##0 iter
-new_size_min_a: 256
-new_size_max_a: 256
-new_size_min_b: 256
-new_size_max_b: 256
+new_size_min_a,new_size_max_a,new_size_min_b,new_size_max_b: 256
+new_size_min_a,new_size_max_a,new_size_min_b,new_size_max_b: 320
+new_size_min_a,new_size_max_a,new_size_min_b,new_size_max_b: 512
 #######15520 iter
 #####new_size_min_a: 320
 #####new_size_max_a: 320
