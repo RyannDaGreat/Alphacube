@@ -38,8 +38,8 @@ texture_reality_b2a_w: 0   # Gotta rename this; its like texture_reality_loss_we
 color_loss_w: 20          # Set to 0 to disable color_loss
 
 # Ryan's Hyperparameters for trainer.py
-label_values: [0,50,100,150,200,255] #For 5 items
-# label_values: [0,75,150,255] #For 3 items
+# label_values: [0,50,100,150,200,255] #For 5 items
+label_values: [0,75,150,255] #For 3 items
 
 view_consistency:
   height,width: 128    #View consistency recovery size. Should be relatively small; we want many collisions to contribute to a std.
@@ -113,7 +113,7 @@ new_size_max_b: 256               # first (randomly) resize the shortest image s
 #    128: μ=0.29
 
 # data_root: ./datasets/five_synth   # dataset folder location
-data_root: ./datasets/alphabet_five   # dataset folder location
+data_root: ./datasets/alphabet_three   # dataset folder location
 
 #VARIANTS:
 
@@ -130,37 +130,24 @@ data_root: ./datasets/alphabet_five   # dataset folder location
 #  type: fourier        #Choices: fourier, raster, mlp
 #  fourier:
 #    scale: 15
+# texture:height,width: 350    #Height and width of the learned texture, in pixels
 
-texture:height,width: 350    #Height and width of the learned texture, in pixels
 
 
 #PURE TEXTURE REALITY
+# texture_reality_b2a_w: 1.5
 texture:multiplier      : 2
-texture:hint:multiplier : 0
-view_consistency_w   : 10
+texture:hint:multiplier : 1
+view_consistency_w   : 0
 texture_reality_a2b_w: 3 #5 is too much, 2 isn't enough
-texture_reality_b2a_w: 1.5
+texture_reality_b2a_w: 0
 batch_size: 5
 color_loss_w: 0          # Set to 0 to disable color_loss
 
 ##0 iter
-new_size_min_a: 256
-new_size_max_a: 256
-new_size_min_b: 256
-new_size_max_b: 256
-####35000 iter
-new_size_min_a: 320
-new_size_max_a: 320
-new_size_min_b: 320
-new_size_max_b: 320
-###51000 iter
-#new_size_min_a: 512
-#new_size_max_a: 512
-#new_size_min_b: 512
-#new_size_max_b: 512
-###120000 iter
-#new_size_min_a: 716
-#new_size_max_a: 716
-#new_size_min_b: 716
-#new_size_max_b: 716
-###150000 iter
+# new_size_min_a,new_size_max_a,new_size_min_b,new_size_max_b: 256
+new_size_min_a,new_size_max_a,new_size_min_b,new_size_max_b: 320
+####60000 iter
+# view_consistency_w   : 10
+# new_size_min_a,new_size_max_a,new_size_min_b,new_size_max_b: 512
+

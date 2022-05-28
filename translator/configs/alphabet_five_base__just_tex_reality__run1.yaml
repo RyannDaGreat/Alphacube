@@ -123,44 +123,40 @@ data_root: ./datasets/alphabet_five   # dataset folder location
 # texture_reality_a2b_w: 0
 # texture_reality_b2a_w: 0
 
-#texture:
 ##BIG TODO: We need to make infinite resolution, pronto...
 ##Or instead create 3d inputs...
+#texture:
 #  height,width: 412    #Height and width of the learned texture, in pixels
 #  type: fourier        #Choices: fourier, raster, mlp
 #  fourier:
 #    scale: 15
+# texture:height,width: 350    #Height and width of the learned texture, in pixels
 
-texture:height,width: 350    #Height and width of the learned texture, in pixels
 
 
 #PURE TEXTURE REALITY
+# view_consistency_w   : 10
+# texture_reality_b2a_w: 1.5
 texture:multiplier      : 2
-texture:hint:multiplier : 0
-view_consistency_w   : 10
+texture:hint:multiplier : 1
+view_consistency_w   : 0
 texture_reality_a2b_w: 3 #5 is too much, 2 isn't enough
-texture_reality_b2a_w: 1.5
+texture_reality_b2a_w: 0
 batch_size: 5
 color_loss_w: 0          # Set to 0 to disable color_loss
 
 ##0 iter
-new_size_min_a: 256
-new_size_max_a: 256
-new_size_min_b: 256
-new_size_max_b: 256
-####35000 iter
-new_size_min_a: 320
-new_size_max_a: 320
-new_size_min_b: 320
-new_size_max_b: 320
-###51000 iter
-#new_size_min_a: 512
-#new_size_max_a: 512
-#new_size_min_b: 512
-#new_size_max_b: 512
-###120000 iter
-#new_size_min_a: 716
-#new_size_max_a: 716
-#new_size_min_b: 716
-#new_size_max_b: 716
-###150000 iter
+new_size_min_a,new_size_max_a,new_size_min_b,new_size_max_b: 256
+##45000 Iter
+new_size_min_a,new_size_max_a,new_size_min_b,new_size_max_b: 320
+###55000 iter
+new_size_min_a,new_size_max_a,new_size_min_b,new_size_max_b: 420
+##178071 iter
+#Sharpen it up a bit...introduce some view consistency here...
+view_consistency_w: 10
+##200000 iter
+#Refinement...we want the average texture nice and sharp...
+# texture:height,width: 350    #Increase the texture resolution  #UPDATE: Can't do this - can't change texture resolution mid-training! A feature for a later date...rather a bug fix lol....
+new_size_min_a,new_size_max_a,new_size_min_b,new_size_max_b: 512
+view_consistency:height,width: 256 #Now that we've got the correct matches, tighten the vice a bit more...
+view_consistency_w: 20 #Also encourage stronger consistency now...texture reality loss might bring down the contrast because it's blurry...

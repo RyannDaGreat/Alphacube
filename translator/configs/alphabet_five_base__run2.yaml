@@ -148,11 +148,11 @@ new_size_min_a: 256
 new_size_max_a: 256
 new_size_min_b: 256
 new_size_max_b: 256
-####35000 iter
-new_size_min_a: 320
-new_size_max_a: 320
-new_size_min_b: 320
-new_size_max_b: 320
+####33000 iter
+#new_size_min_a: 320
+#new_size_max_a: 320
+#new_size_min_b: 320
+#new_size_max_b: 320
 ###51000 iter
 #new_size_min_a: 512
 #new_size_max_a: 512

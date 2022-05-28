@@ -130,29 +130,30 @@ data_root: ./datasets/alphabet_five   # dataset folder location
 #  type: fourier        #Choices: fourier, raster, mlp
 #  fourier:
 #    scale: 15
+# texture:height,width: 350    #Height and width of the learned texture, in pixels
 
-texture:height,width: 350    #Height and width of the learned texture, in pixels
 
 
 #PURE TEXTURE REALITY
+# texture_reality_b2a_w: 1.5
 texture:multiplier      : 2
-texture:hint:multiplier : 0
-view_consistency_w   : 10
+texture:hint:multiplier : 1
+view_consistency_w   : 0
 texture_reality_a2b_w: 3 #5 is too much, 2 isn't enough
-texture_reality_b2a_w: 1.5
+texture_reality_b2a_w: 0
 batch_size: 5
 color_loss_w: 0          # Set to 0 to disable color_loss
 
 ##0 iter
-new_size_min_a: 256
-new_size_max_a: 256
-new_size_min_b: 256
-new_size_max_b: 256
-####35000 iter
-new_size_min_a: 320
-new_size_max_a: 320
-new_size_min_b: 320
-new_size_max_b: 320
+# new_size_min_a,new_size_max_a,new_size_min_b,new_size_max_b: 256
+new_size_min_a,new_size_max_a,new_size_min_b,new_size_max_b: 320
+####60000 iter
+view_consistency_w   : 10
+new_size_min_a,new_size_max_a,new_size_min_b,new_size_max_b: 400
+#new_size_min_a: 320
+#new_size_max_a: 320
+#new_size_min_b: 320
+#new_size_max_b: 320
 ###51000 iter
 #new_size_min_a: 512
 #new_size_max_a: 512
@@ -164,3 +165,4 @@ new_size_max_b: 320
 #new_size_min_b: 716
 #new_size_max_b: 716
 ###150000 iter
+

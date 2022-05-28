@@ -131,8 +131,10 @@ data_root: ./datasets/alphabet_five   # dataset folder location
 #  fourier:
 #    scale: 15
 
-texture:height,width: 350    #Height and width of the learned texture, in pixels
+texture:height,width: 256    #Height and width of the learned texture, in pixels
 
+#Rasterness
+texture:type: raster
 
 #PURE TEXTURE REALITY
 texture:multiplier      : 2
@@ -149,10 +151,10 @@ new_size_max_a: 256
 new_size_min_b: 256
 new_size_max_b: 256
 ####35000 iter
-new_size_min_a: 320
-new_size_max_a: 320
-new_size_min_b: 320
-new_size_max_b: 320
+# new_size_min_a: 320
+# new_size_max_a: 320
+# new_size_min_b: 320
+# new_size_max_b: 320
 ###51000 iter
 #new_size_min_a: 512
 #new_size_max_a: 512
