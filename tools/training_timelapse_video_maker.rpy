@@ -1,19 +1,24 @@
 #EXAMPLE USAGE DIRECTORY:
 # cd ~/CleanCode/Projects/TRITON/Versions/Alphacube__alphabet_five/translator/trained_models/outputs/alphabet_five_base__just_tex_reality__run6_branch1/images
-  
+ 
 rows=7      #How many rows are in these images?
 columns=16  #How many columns are in these images?
-row=4       #Which row do we want a timelapse of?
+row=1       #Which row do we want a timelapse of?
+iter_per_image = 250 #How many iterations pass by every image?
 
-def get_frame(file,row=4,rows=7,columns=16):
+def get_frame(file):
     image=load_image(file)
     chunks=split_tensor_into_regions(image,rows,columns,flat=False)
     images=chunks[row]
     return tiled_images(images)
 
 def start():
-    title+='training_timelapse___'
-    title+=get_folder_name(get_parent_directory(get_current_directory()))
+    name=get_folder_name(get_parent_directory(get_current_directory()))
+    print('Name:',name)
+
+    title=''
+    title+='training_timelapse_row_%i__'%row
+    title+=name
     title+='.mp4'
 
     files=get_all_files(relative=True)
@@ -23,11 +28,15 @@ def start():
     print('Number of frames:',len(files))
     video_path=path_join('../../../../../untracked',title)
     video_writer=VideoWriterMP4(video_path,video_bitrate='max',framerate=20)
-    for i,file in enumerate(files):
-        frame=get_frame(file)
-        video_writer.write_frame(frame)
-        #print(i)
-    video_writer.finish()
-    print('Done!')
-    print('Created',video_path)
-    print('AKA',get_absolute_path(video_path))
+    try:
+        for i,file in enumerate(files):
+            frame=get_frame(file)
+            #Iteration label is approximate, give or take a small few
+            frame=labeled_image(frame,'%s  -  Iter %6i'%(name,iter_per_image*i))
+            video_writer.write_frame(frame)
+            #print(i)
+    finally:
+        video_writer.finish()
+        print('Done!')
+        print('Created',video_path)
+        print('AKA',get_absolute_path(video_path))
